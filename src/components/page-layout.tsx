@@ -1,9 +1,10 @@
 import { useAtomValue } from "jotai"
 import { useNetworkState } from "react-use"
 import { LoadingIcon16 } from "../components/icons"
-import { RepoForm } from "../components/repo-form"
+import { WorkspaceForm } from "../components/repo-form"
 import {
-  githubRepoAtom,
+  activeWorkspaceAtom,
+  ENV_OPENAI_KEY,
   isCloningRepoAtom,
   isRepoClonedAtom,
   isRepoNotClonedAtom,
@@ -35,8 +36,8 @@ export function PageLayout({
   const isRepoNotCloned = useAtomValue(isRepoNotClonedAtom)
   const isCloningRepo = useAtomValue(isCloningRepoAtom)
   const isRepoCloned = useAtomValue(isRepoClonedAtom)
-  const githubRepo = useAtomValue(githubRepoAtom)
-  const openaiKey = useAtomValue(openaiKeyAtom)
+  const activeWorkspace = useAtomValue(activeWorkspaceAtom)
+  const openaiKey = useAtomValue(openaiKeyAtom) || ENV_OPENAI_KEY
   const voiceAssistantEnabled = useAtomValue(voiceAssistantEnabledAtom)
   const { online } = useNetworkState()
 
@@ -56,21 +57,23 @@ export function PageLayout({
                   <div className="card-1 flex flex-col gap-6 p-4">
                     <div className="flex flex-col gap-2">
                       <h1 className="text-lg font-bold [text-box-trim:trim-start]">
-                        Choose a repository
+                        Connect a workspace
                       </h1>
                       <p className="text-pretty text-text-secondary">
                         Store your notes as markdown files in a GitHub repository of your choice.
                       </p>
                     </div>
-                    <RepoForm />
+                    <WorkspaceForm />
                   </div>
                 </div>
               </div>
             ) : null}
-            {isCloningRepo && githubRepo && !disableGuard ? (
+            {isCloningRepo && !disableGuard ? (
               <div className="flex items-center gap-2 p-4 leading-4 text-text-secondary">
                 <LoadingIcon16 />
-                Cloning {githubRepo.owner}/{githubRepo.name}…
+                {activeWorkspace
+                  ? `Cloning ${activeWorkspace.githubRepo.owner}/${activeWorkspace.githubRepo.name}…`
+                  : "Cloning…"}
               </div>
             ) : null}
             {isRepoCloned || isSignedOut || disableGuard ? children : null}
