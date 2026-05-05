@@ -5,6 +5,8 @@ import { createContext, useContext } from "react"
 import { useNetworkState } from "react-use"
 import { useRegisterSW } from "virtual:pwa-register/react"
 import {
+  activeWorkspaceAtom,
+  colorSchemeAtom,
   globalStateMachineAtom,
   isHelpPanelOpenAtom,
   notesAtom,
@@ -13,15 +15,19 @@ import {
 import { cx } from "../utils/cx"
 import { isValidDateString, isValidWeekString, toDateString } from "../utils/date"
 import {
+  BookIcon16,
   CalendarDateFillIcon16,
   CalendarDateIcon16,
   CircleQuestionMarkFillIcon16,
   CircleQuestionMarkIcon16,
+  MonitorIcon16,
+  MoonIcon16,
   NoteFillIcon16,
   NoteIcon16,
   OfflineIcon16,
   SettingsFillIcon16,
   SettingsIcon16,
+  SunIcon16,
   TagFillIcon16,
   TagIcon16,
 } from "./icons"
@@ -44,6 +50,8 @@ export function NavItems({
   const syncText = useSyncStatusText()
   const send = useSetAtom(globalStateMachineAtom)
   const { online } = useNetworkState()
+  const activeWorkspace = useAtomValue(activeWorkspaceAtom)
+  const [colorScheme, setColorScheme] = useAtom(colorSchemeAtom)
   const { pathname } = useLocation()
 
   const today = new Date()
@@ -89,7 +97,7 @@ export function NavItems({
                 icon={<NoteIcon16 />}
                 onNavigate={onNavigate}
               >
-                Notes
+                {activeWorkspace?.name || "Notes"}
               </NavLink>
             </li>
             <li>
@@ -112,7 +120,7 @@ export function NavItems({
             <li>
               <NavLink
                 to="/tags"
-                search={{ query: undefined, sort: "name", view: "list" }}
+                search={{ query: undefined, sort: "name", view: "grid" }}
                 activeIcon={<TagFillIcon16 />}
                 icon={<TagIcon16 />}
                 onNavigate={onNavigate}
@@ -167,6 +175,31 @@ export function NavItems({
               Offline
             </div>
           ) : null}
+          <button
+            className="nav-item text-text-secondary"
+            data-size={size}
+            title={
+              colorScheme === "system"
+                ? "Appearance: System"
+                : colorScheme === "light"
+                  ? "Appearance: Light"
+                  : "Appearance: Dark"
+            }
+            onClick={() =>
+              setColorScheme(
+                colorScheme === "system" ? "light" : colorScheme === "light" ? "dark" : "system",
+              )
+            }
+          >
+            {colorScheme === "dark" ? (
+              <MoonIcon16 />
+            ) : colorScheme === "light" ? (
+              <SunIcon16 />
+            ) : (
+              <MonitorIcon16 />
+            )}
+            {colorScheme === "dark" ? "Dark" : colorScheme === "light" ? "Light" : "System"}
+          </button>
           {syncText ? (
             <button
               className="nav-item text-text-secondary"
@@ -177,6 +210,14 @@ export function NavItems({
               {syncText}
             </button>
           ) : null}
+          <NavLink
+            to="/docs"
+            icon={<BookIcon16 />}
+            className="text-text-secondary"
+            onNavigate={onNavigate}
+          >
+            Docs
+          </NavLink>
           <NavLink
             to="/settings"
             search={{ query: undefined }}

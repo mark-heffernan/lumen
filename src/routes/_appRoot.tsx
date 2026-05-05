@@ -14,6 +14,7 @@ import {
   voiceConversationMachineAtom,
 } from "../components/voice-conversation"
 import {
+  colorSchemeAtom,
   epaperAtom,
   globalStateMachineAtom,
   notesAtom,
@@ -237,6 +238,16 @@ function RouteComponent() {
   React.useEffect(() => {
     document.documentElement.toggleAttribute("data-epaper", epaper)
   }, [epaper])
+
+  // Apply manual color scheme override
+  const colorScheme = useAtomValue(colorSchemeAtom)
+  React.useEffect(() => {
+    if (colorScheme === "system") {
+      delete document.documentElement.dataset.colorScheme
+    } else {
+      document.documentElement.dataset.colorScheme = colorScheme
+    }
+  }, [colorScheme])
 
   // Apply overflow classes to parent elements
   React.useEffect(() => {
