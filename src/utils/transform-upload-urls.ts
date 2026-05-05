@@ -3,29 +3,27 @@ import { fromMarkdown } from "mdast-util-from-markdown"
 import { visit } from "unist-util-visit"
 import { parseFrontmatter, updateFrontmatterValue } from "./frontmatter"
 
-// Matches UPLOADS_DIR in src/hooks/attach-file.ts
-// Duplicated here to avoid importing browser-specific code in this utility
-const UPLOADS_DIR = "/uploads"
-
 /**
- * Transforms URLs in markdown content that point to /uploads/* to gist raw URLs
+ * Transforms URLs in markdown content that point to the uploads directory to gist raw URLs
  * and returns a list of unique file paths that need to be uploaded
  */
 export function transformUploadUrls({
   content,
   gistId,
   gistOwner,
+  uploadsDir = "/uploads",
 }: {
   content: string
   gistId: string
   gistOwner: string
+  uploadsDir?: string
 }): { content: string; uploadPaths: string[] } {
   const uploadPaths = new Set<string>()
   let result = content
 
   // Handle `image` frontmatter key with plain upload paths
   const { frontmatter } = parseFrontmatter(result)
-  if (typeof frontmatter.image === "string" && frontmatter.image.startsWith(`${UPLOADS_DIR}/`)) {
+  if (typeof frontmatter.image === "string" && frontmatter.image.startsWith(`${uploadsDir}/`)) {
     const imagePath = frontmatter.image
     const fileName = imagePath.split("/").pop()
     const newUrl = `https://gist.githubusercontent.com/${gistOwner}/${gistId}/raw/${fileName}`
@@ -42,7 +40,7 @@ export function transformUploadUrls({
   // Visit all link and image nodes
   visit(mdast, (node) => {
     if (node.type !== "link" && node.type !== "image") return
-    if (!node.position || !node.url.startsWith(`${UPLOADS_DIR}/`)) return
+    if (!node.position || !node.url.startsWith(`${uploadsDir}/`)) return
 
     // Transform the URL to a gist raw URL
     const fileName = node.url.split("/").pop()
@@ -71,7 +69,7 @@ export function transformUploadUrls({
   }
 
   // Transform HTML img tags
-  const escapedUploadsDir = UPLOADS_DIR.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
+  const escapedUploadsDir = uploadsDir.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")
   const imgRegex = new RegExp(
     `<img([^>]+)src=["'](?<url>${escapedUploadsDir}/[^"']+)["']([^>]*)>`,
     "g",

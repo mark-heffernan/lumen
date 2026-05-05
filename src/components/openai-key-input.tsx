@@ -2,7 +2,7 @@ import { useAtom } from "jotai"
 import { atomWithMachine } from "jotai-xstate"
 import { useEvent, useNetworkState } from "react-use"
 import { createMachine } from "xstate"
-import { OPENAI_KEY_STORAGE_KEY, openaiKeyAtom } from "../global-state"
+import { ENV_OPENAI_KEY, OPENAI_KEY_STORAGE_KEY, openaiKeyAtom } from "../global-state"
 import { validateOpenAIKey } from "../utils/validate-openai-key"
 import { CheckIcon16, ErrorIcon16, LoadingIcon16 } from "./icons"
 import { TextInput } from "./text-input"
@@ -97,6 +97,30 @@ export function OpenAIKeyInput() {
   useEvent("online", () => {
     send("RESTART")
   })
+
+  if (ENV_OPENAI_KEY) {
+    return (
+      <FormControl
+        htmlFor="openai-key"
+        label="OpenAI key"
+        description={
+          <span className="flex items-center gap-2 font-mono text-sm text-text-success">
+            <CheckIcon16 />
+            Configured via environment variable
+          </span>
+        }
+      >
+        <TextInput
+          id="openai-key"
+          name="openai-key"
+          type="password"
+          value="sk-env-••••••••••••••••••••••••••••••••••••••••••"
+          readOnly
+          disabled
+        />
+      </FormControl>
+    )
+  }
 
   return (
     <FormControl

@@ -35,3 +35,4 @@ stats.html
 
 # Environment variables
 .env
+.env*.local

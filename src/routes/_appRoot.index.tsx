@@ -1,4 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router"
+import { useAtomValue } from "jotai"
+import { activeWorkspaceAtom } from "../global-state"
 import { NoteIcon16 } from "../components/icons"
 import { NoteList } from "../components/note-list"
 import { PageLayout } from "../components/page-layout"
@@ -21,9 +23,10 @@ export const Route = createFileRoute("/_appRoot/")({
 function RouteComponent() {
   const { query, view } = Route.useSearch()
   const navigate = Route.useNavigate()
+  const activeWorkspace = useAtomValue(activeWorkspaceAtom)
 
   return (
-    <PageLayout title="Notes" icon={<NoteIcon16 />}>
+    <PageLayout title={activeWorkspace?.name || "Notes"} icon={<NoteIcon16 />}>
       <div className="p-4 pt-0">
         <NoteList
           query={query ?? ""}

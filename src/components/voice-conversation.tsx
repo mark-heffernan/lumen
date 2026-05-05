@@ -12,7 +12,7 @@ import { useDebouncedCallback } from "use-debounce"
 import { assign, createMachine } from "xstate"
 import type { ZodSchema } from "zod/v3"
 import { zodToJsonSchema } from "zod-to-json-schema"
-import { OPENAI_KEY_STORAGE_KEY } from "../global-state"
+import { ENV_OPENAI_KEY, OPENAI_KEY_STORAGE_KEY } from "../global-state"
 import { useMousePosition } from "../hooks/mouse-position"
 import { cx } from "../utils/cx"
 import { notificationOffSound, notificationSound, playSound } from "../utils/sounds"
@@ -660,9 +660,9 @@ function createVoiceConversationMachine() {
           init()
 
           async function init() {
-            const openaiKey = String(
-              JSON.parse(localStorage.getItem(OPENAI_KEY_STORAGE_KEY) ?? "''"),
-            )
+            const openaiKey =
+              ENV_OPENAI_KEY ||
+              String(JSON.parse(localStorage.getItem(OPENAI_KEY_STORAGE_KEY) ?? "''"))
 
             // Validate OpenAI key before proceeding
             const isValidKey = await validateOpenAIKey(openaiKey)

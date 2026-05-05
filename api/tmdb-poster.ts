@@ -1,6 +1,7 @@
 /**
  * Proxies movie/TV poster images from TMDb, looked up by IMDb ID.
  * Usage: /api/tmdb-poster?imdbId=tt0111161&size=w185
+ * Info: https://developer.themoviedb.org/reference/find-by-id
  */
 export async function GET(request: Request): Promise<Response> {
   try {
@@ -18,7 +19,7 @@ export async function GET(request: Request): Promise<Response> {
     }
 
     const response = await fetch(
-      `https://api.themoviedb.org/3/find/${imdbId}?external_source=imdb_id`,
+      `https://api.themoviedb.org/3/find/${imdbId}?external_source=imdb_id&language=en-GB`,
       { headers: { Authorization: `Bearer ${apiKey}` } },
     )
 

@@ -165,4 +165,48 @@ Here's a content image: ![Alt](/uploads/content.png)`
     expect(result.uploadPaths).toContain("/uploads/cover.png")
     expect(result.uploadPaths).toContain("/uploads/content.png")
   })
+
+  describe("custom uploadsDir", () => {
+    const uploadsDir = "/src/assets/images/blog"
+
+    it("should transform image URLs from a custom uploads directory", () => {
+      const input = `![Alt](/src/assets/images/blog/photo.jpg)`
+      const expected = `![Alt](https://gist.githubusercontent.com/${gistOwner}/${gistId}/raw/photo.jpg)`
+      const result = transformUploadUrls({ content: input, gistId, gistOwner, uploadsDir })
+
+      expect(result.content).toBe(expected)
+      expect(result.uploadPaths).toEqual(["/src/assets/images/blog/photo.jpg"])
+    })
+
+    it("should not transform URLs from a different directory", () => {
+      const input = `![Alt](/uploads/photo.jpg)`
+      const result = transformUploadUrls({ content: input, gistId, gistOwner, uploadsDir })
+
+      expect(result.content).toBe(input)
+      expect(result.uploadPaths).toEqual([])
+    })
+
+    it("should transform HTML img tags from a custom uploads directory", () => {
+      const input = `<img src="/src/assets/images/blog/photo.jpg" alt="Photo" />`
+      const expected = `<img src="https://gist.githubusercontent.com/${gistOwner}/${gistId}/raw/photo.jpg" alt="Photo" />`
+      const result = transformUploadUrls({ content: input, gistId, gistOwner, uploadsDir })
+
+      expect(result.content).toBe(expected)
+      expect(result.uploadPaths).toEqual(["/src/assets/images/blog/photo.jpg"])
+    })
+
+    it("should transform image frontmatter from a custom uploads directory", () => {
+      const input = `---
+image: /src/assets/images/blog/cover.png
+---
+
+Content`
+      const result = transformUploadUrls({ content: input, gistId, gistOwner, uploadsDir })
+
+      expect(result.content).toContain(
+        `image: https://gist.githubusercontent.com/${gistOwner}/${gistId}/raw/cover.png`,
+      )
+      expect(result.uploadPaths).toContain("/src/assets/images/blog/cover.png")
+    })
+  })
 })

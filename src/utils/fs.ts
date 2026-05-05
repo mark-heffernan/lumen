@@ -7,7 +7,6 @@ import {
   resolveGitLfsPointer,
   uploadToGitLfsServer,
 } from "./git-lfs"
-import { REPO_DIR } from "./git"
 
 const DB_NAME = "fs"
 
@@ -43,14 +42,16 @@ export async function getFileUrl({
   path,
   githubUser,
   githubRepo,
+  repoDir,
 }: {
   file: File
   path: string
   githubUser: GitHubUser
   githubRepo: GitHubRepository
+  repoDir: string
 }) {
   // If file is tracked with Git LFS, resolve the pointer
-  if (await isTrackedWithGitLfs(path)) {
+  if (await isTrackedWithGitLfs(path, repoDir)) {
     return await resolveGitLfsPointer({ file, githubUser, githubRepo })
   } else {
     return URL.createObjectURL(file)
@@ -63,13 +64,15 @@ export async function writeFile({
   content,
   githubUser,
   githubRepo,
+  repoDir,
 }: {
   path: string
   content: ArrayBuffer
   githubUser: GitHubUser
   githubRepo: GitHubRepository
+  repoDir: string
 }) {
-  if (await isTrackedWithGitLfs(path)) {
+  if (await isTrackedWithGitLfs(path, repoDir)) {
     await uploadToGitLfsServer({ content, githubUser, githubRepo })
 
     // Write a Git LFS pointer to the file system
@@ -81,8 +84,28 @@ export async function writeFile({
   }
 }
 
+/** Recursively delete all contents of a directory (leaves the directory itself intact) */
+export async function fsDeleteDir(dirPath: string): Promise<void> {
+  let entries: string[]
+  try {
+    entries = await fs.promises.readdir(dirPath)
+  } catch {
+    return
+  }
+  for (const entry of entries) {
+    const fullPath = `${dirPath}/${entry}`
+    const stat = await fs.promises.stat(fullPath)
+    if (stat.isDirectory()) {
+      await fsDeleteDir(fullPath)
+      await fs.promises.rmdir(fullPath)
+    } else {
+      await fs.promises.unlink(fullPath)
+    }
+  }
+}
+
 /** Log the state of the file system to the console */
-export async function fsDebug(fs: LightningFS, dir = REPO_DIR) {
+export async function fsDebug(fs: LightningFS, dir = "/") {
   try {
     // List files and directories at the specified path
     const files = await fs.promises.readdir(dir)

@@ -89,7 +89,6 @@ function HelpContent({
               Changelog
             </HelpLink>
             <HelpLink href="https://github.com/lumen-notes/lumen">GitHub</HelpLink>
-            <HelpLink href="https://twitter.com/lumen_notes">Twitter</HelpLink>
           </HelpSection>
 
           <HelpSection title="Global shortcuts">
@@ -139,6 +138,7 @@ function HelpContent({
             <MarkdownSyntaxItem syntax="- [ ] Unchecked" />
             <MarkdownSyntaxItem syntax="- [x] Checked" />
             <MarkdownSyntaxItem syntax="> Blockquote" />
+            <MarkdownSyntaxItem syntax="<mark>Highlight</mark>" />
             <MarkdownSyntaxItem syntax="$$LaTeX^{math}$$" />
             <MarkdownSyntaxItem syntax="---" />
             <MarkdownSyntaxItem syntax="[[id|Note link]]" />

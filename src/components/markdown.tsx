@@ -1,4 +1,5 @@
 import { Link } from "@tanstack/react-router"
+import { useAtomValue } from "jotai"
 import React from "react"
 import ReactMarkdown from "react-markdown"
 import { CodeProps, LiProps } from "react-markdown/lib/ast-to-react"
@@ -8,7 +9,8 @@ import rehypeRaw from "rehype-raw"
 import remarkGfm from "remark-gfm"
 import remarkMath from "remark-math"
 import { z } from "zod"
-import { UPLOADS_DIR } from "../hooks/attach-file"
+import { activeWorkspaceAtom } from "../global-state"
+import { DEFAULT_UPLOADS_DIR } from "../hooks/attach-file"
 import { useNoteById, useSaveNote } from "../hooks/note"
 import { useMoveTask } from "../hooks/task"
 import { generateNoteId } from "../utils/note-id"
@@ -434,6 +436,10 @@ const anchorUrlSchema = z.union([z.string().url(), z.tuple([z.string().url()])])
 
 function Anchor(props: React.ComponentPropsWithoutRef<"a">) {
   const ref = React.useRef<HTMLAnchorElement>(null)
+  const activeWorkspace = useAtomValue(activeWorkspaceAtom)
+  const uploadsDir = activeWorkspace?.uploadsPath
+    ? `/${activeWorkspace.uploadsPath}`
+    : DEFAULT_UPLOADS_DIR
 
   // Render footnote references with a preview hover card
   if (props.href?.startsWith("#user-content-fn-")) {
@@ -451,7 +457,7 @@ function Anchor(props: React.ComponentPropsWithoutRef<"a">) {
   }
 
   // Transform upload link
-  if (props.href?.startsWith(UPLOADS_DIR)) {
+  if (props.href?.startsWith(uploadsDir)) {
     return (
       <Link
         to="/file"

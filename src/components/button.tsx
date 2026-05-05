@@ -3,7 +3,7 @@ import { Keys } from "./keys"
 import { cx } from "../utils/cx"
 
 export type ButtonProps = React.ComponentPropsWithoutRef<"button"> & {
-  variant?: "secondary" | "primary"
+  variant?: "secondary" | "primary" | "destructive"
   size?: "small" | "medium"
   shortcut?: string[]
 }
@@ -20,7 +20,9 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           "coarse:h-10 coarse:px-4",
           variant === "secondary" &&
             "bg-bg-secondary enabled:hover:bg-bg-secondary-hover enabled:active:bg-bg-secondary-active epaper:font-bold",
-          variant === "primary" && "bg-text font-bold text-bg [&_*]:text-bg",
+          variant === "primary" && "bg-text font-bold text-bg **:text-bg",
+          variant === "destructive" &&
+            "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
           size === "small" && "h-6 px-2",
           size === "medium" && "h-8 px-3",
           className,

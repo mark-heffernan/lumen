@@ -2,9 +2,8 @@ import { useAtomValue } from "jotai"
 import React from "react"
 import { useNetworkState } from "react-use"
 import { ErrorIcon16, LoadingIcon16, OfflineIcon16 } from "../components/icons"
-import { githubRepoAtom, githubUserAtom } from "../global-state"
+import { activeRepoDirAtom, githubRepoAtom, githubUserAtom } from "../global-state"
 import { getFileUrl, readFile } from "../utils/fs"
-import { REPO_DIR } from "../utils/git"
 
 export const fileCache = new Map<string, { file: File; url: string }>()
 
@@ -18,6 +17,7 @@ type FilePreviewProps = {
 export function FilePreview({ path, alt = "", width, height }: FilePreviewProps) {
   const githubUser = useAtomValue(githubUserAtom)
   const githubRepo = useAtomValue(githubRepoAtom)
+  const repoDir = useAtomValue(activeRepoDirAtom)
   const cachedFile = fileCache.get(path)
   const [file, setFile] = React.useState<File | null>(cachedFile?.file ?? null)
   const [url, setUrl] = React.useState(cachedFile?.url ?? "")
@@ -34,8 +34,8 @@ export function FilePreview({ path, alt = "", width, height }: FilePreviewProps)
       try {
         setIsLoading(true)
 
-        const file = await readFile(`${REPO_DIR}${path}`)
-        const url = await getFileUrl({ file, path, githubUser, githubRepo })
+        const file = await readFile(`${repoDir}${path}`)
+        const url = await getFileUrl({ file, path, githubUser, githubRepo, repoDir })
 
         setFile(file)
         setUrl(url)
@@ -50,7 +50,7 @@ export function FilePreview({ path, alt = "", width, height }: FilePreviewProps)
     }
 
     loadFile()
-  }, [file, githubUser, githubRepo, path])
+  }, [file, githubUser, githubRepo, repoDir, path])
 
   if (!file) {
     return isLoading ? (

@@ -4,7 +4,6 @@ import git from "isomorphic-git"
 import http from "isomorphic-git/http/web"
 import { GitHubRepository, GitHubUser, Note, NoteId } from "../schema"
 import { readFile } from "./fs"
-import { REPO_DIR } from "./git"
 import { isTrackedWithGitLfs, resolveGitLfsPointer } from "./git-lfs"
 import { inlineNoteEmbeds } from "./inline-note-embeds"
 import { stripWikilinks } from "./strip-wikilinks"
@@ -62,13 +61,18 @@ export async function updateGist({
   githubUser,
   githubRepo,
   notes,
+  repoDir,
+  uploadsPath = "",
 }: {
   gistId: string
   note: Note
   githubUser: GitHubUser
   githubRepo: GitHubRepository
   notes: Map<NoteId, Note>
+  repoDir: string
+  uploadsPath?: string
 }) {
+  const uploadsDir = uploadsPath ? `/${uploadsPath}` : "/uploads"
   const filename = `${note.id}.md`
   const gistDir = `/tmp/gist-${gistId}`
 
@@ -80,6 +84,7 @@ export async function updateGist({
       content,
       gistId,
       gistOwner: githubUser.login,
+      uploadsDir,
     })
 
     // Clone the gist repository
@@ -115,10 +120,10 @@ export async function updateGist({
 
     // Add file uploads to the gist
     for (const path of uploadPaths) {
-      const file = await readFile(`${REPO_DIR}${path}`)
+      const file = await readFile(`${repoDir}${path}`)
 
       // If the file is tracked with Git LFS, resolve the pointer and fetch the binary file content
-      if (await isTrackedWithGitLfs(path)) {
+      if (await isTrackedWithGitLfs(path, repoDir)) {
         const fileUrl = await resolveGitLfsPointer({
           file,
           githubUser,
