@@ -34,7 +34,7 @@ export async function GET(request: Request): Promise<Response> {
       })
     }
 
-    const redirectUrl = new URL(state || "https://uselumen.com")
+    const redirectUrl = new URL(state || "https://lumen-delta-eight.vercel.app")
     redirectUrl.searchParams.set("user_token", token)
     if (typeof id === "number" && Number.isFinite(id)) {
       redirectUrl.searchParams.set("user_id", String(id))
