@@ -2,6 +2,8 @@ import { useAtomValue, useSetAtom } from "jotai"
 import { selectAtom, useAtomCallback } from "jotai/utils"
 import React from "react"
 import {
+  activeRepoDirAtom,
+  activeWorkspaceAtom,
   backlinksIndexAtom,
   githubRepoAtom,
   githubUserAtom,
@@ -54,6 +56,8 @@ export function useSaveNote() {
   const send = useSetAtom(globalStateMachineAtom)
   const githubUser = useAtomValue(githubUserAtom)
   const githubRepo = useAtomValue(githubRepoAtom)
+  const repoDir = useAtomValue(activeRepoDirAtom)
+  const activeWorkspace = useAtomValue(activeWorkspaceAtom)
   const getNotes = useAtomCallback(React.useCallback((get) => get(notesAtom), []))
 
   const saveNote = React.useCallback(
@@ -78,10 +82,12 @@ export function useSaveNote() {
           githubUser,
           githubRepo,
           notes: getNotes(),
+          repoDir,
+          uploadsPath: activeWorkspace?.uploadsPath ?? "",
         })
       }
     },
-    [send, githubUser, githubRepo, getNotes],
+    [send, githubUser, githubRepo, repoDir, activeWorkspace, getNotes],
   )
 
   return saveNote

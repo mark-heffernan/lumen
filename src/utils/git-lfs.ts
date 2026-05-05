@@ -1,13 +1,16 @@
 import micromatch from "micromatch"
 import { GitHubRepository, GitHubUser } from "../schema"
 import { fs } from "./fs"
-import { REPO_DIR } from "./git"
 
-/** Check if a file is tracked with Git LFS by checking the .gitattributes file */
-export async function isTrackedWithGitLfs(path: string) {
+/**
+ * Check if a file is tracked with Git LFS by checking the .gitattributes file.
+ * `path` may be either a full filesystem path or a repo-relative path.
+ * `repoDir` is used to read .gitattributes and to normalize the path.
+ */
+export async function isTrackedWithGitLfs(path: string, repoDir: string) {
   try {
     // Get .gitattributes file
-    const gitAttributes = await fs.promises.readFile(`${REPO_DIR}/.gitattributes`)
+    const gitAttributes = await fs.promises.readFile(`${repoDir}/.gitattributes`)
 
     // Parse .gitattributes file
     const parsedGitAttributes = gitAttributes
@@ -40,8 +43,8 @@ export async function isTrackedWithGitLfs(path: string) {
       return (
         micromatch.isMatch(
           path
-            // Remove REPO_DIR from path
-            .replace(REPO_DIR, "")
+            // Strip repoDir prefix if present (handles both full and relative paths)
+            .replace(repoDir, "")
             // Remove leading slash from path
             .replace(/^\/*/, ""),
           pattern

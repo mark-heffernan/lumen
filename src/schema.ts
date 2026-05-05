@@ -57,6 +57,16 @@ export type GitHubRepository = {
   name: string
 }
 
+export const workspaceSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  githubRepo: z.object({ owner: z.string(), name: z.string() }),
+  notesPath: z.string(),
+  uploadsPath: z.string().default(""),
+})
+
+export type Workspace = z.infer<typeof workspaceSchema>
+
 export const githubUserSchema = z.object({
   token: z.string(),
   id: z.number().optional(),

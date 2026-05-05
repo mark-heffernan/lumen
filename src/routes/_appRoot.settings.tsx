@@ -1,24 +1,19 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router"
 import { useAtom, useAtomValue } from "jotai"
-import { useState } from "react"
 import { useNetworkState } from "react-use"
 import { Button } from "../components/button"
 import { useSignOut } from "../components/github-auth"
 import { GitHubAvatar } from "../components/github-avatar"
-import { LoadingIcon16, SettingsIcon16 } from "../components/icons"
+import { SettingsIcon16 } from "../components/icons"
 import { OpenAIKeyInput } from "../components/openai-key-input"
 import { PageLayout } from "../components/page-layout"
-import { RepoForm } from "../components/repo-form"
 import { Signature } from "../components/signature"
 import { Switch } from "../components/switch"
+import { WorkspaceList } from "../components/workspace-list"
 import {
   epaperAtom,
-  githubRepoAtom,
   githubUserAtom,
   hasOpenAIKeyAtom,
-  isCloningRepoAtom,
-  isRepoClonedAtom,
-  isRepoNotClonedAtom,
   vimModeAtom,
   voiceAssistantEnabledAtom,
 } from "../global-state"
@@ -83,13 +78,8 @@ function SettingsSection({ title, children }: { title: string; children: React.R
 function GitHubSection() {
   const navigate = useNavigate()
   const githubUser = useAtomValue(githubUserAtom)
-  const githubRepo = useAtomValue(githubRepoAtom)
-  const isRepoNotCloned = useAtomValue(isRepoNotClonedAtom)
-  const isCloningRepo = useAtomValue(isCloningRepoAtom)
-  const isRepoCloned = useAtomValue(isRepoClonedAtom)
   const signOut = useSignOut()
   const { online } = useNetworkState()
-  const [isEditingRepo, setIsEditingRepo] = useState(false)
 
   if (!githubUser) {
     return (
@@ -100,58 +90,32 @@ function GitHubSection() {
   }
 
   return (
-    <SettingsSection title="GitHub">
-      <div className="flex items-center justify-between gap-4">
-        <div className="flex w-0 grow flex-col gap-1">
-          <span className="text-sm leading-4 text-text-secondary">Account</span>
-          <span className="flex items-center gap-2 leading-4">
-            {online ? <GitHubAvatar login={githubUser.login} size={16} /> : null}
-            <span className="truncate">{githubUser.login}</span>
-          </span>
+    <>
+      <SettingsSection title="GitHub">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex w-0 grow flex-col gap-1">
+            <span className="text-sm leading-4 text-text-secondary">Account</span>
+            <span className="flex items-center gap-2 leading-4">
+              {online ? <GitHubAvatar login={githubUser.login} size={16} /> : null}
+              <span className="truncate">{githubUser.login}</span>
+            </span>
+          </div>
+          <Button
+            className="shrink-0"
+            onClick={() => {
+              signOut()
+              navigate({ to: "/", search: { query: undefined, view: "grid" } })
+            }}
+          >
+            Sign out
+          </Button>
         </div>
-        <Button
-          className="shrink-0"
-          onClick={() => {
-            signOut()
-            navigate({ to: "/", search: { query: undefined, view: "grid" } })
-          }}
-        >
-          Sign out
-        </Button>
-      </div>
-      <div className="mt-4 border-t border-border-secondary pt-4 empty:hidden">
-        {isRepoNotCloned || isEditingRepo ? (
-          <RepoForm
-            onSubmit={() => setIsEditingRepo(false)}
-            onCancel={!isRepoNotCloned ? () => setIsEditingRepo(false) : undefined}
-          />
-        ) : null}
-        {isCloningRepo && githubRepo ? (
-          <div className="flex items-center gap-2 leading-4 text-text-secondary">
-            <LoadingIcon16 />
-            Cloning {githubRepo.owner}/{githubRepo.name}…
-          </div>
-        ) : null}
-        {isRepoCloned && !isEditingRepo && githubRepo ? (
-          <div className="flex items-center justify-between gap-4">
-            <div className="flex w-0 grow flex-col items-start gap-1">
-              <span className="text-sm leading-4 text-text-secondary">Repository</span>
-              <a
-                href={`https://github.com/${githubRepo.owner}/${githubRepo.name}`}
-                className="link leading-5"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                {githubRepo.owner}/{githubRepo.name}
-              </a>
-            </div>
-            <Button className="shrink-0" onClick={() => setIsEditingRepo(true)}>
-              Change
-            </Button>
-          </div>
-        ) : null}
-      </div>
-    </SettingsSection>
+      </SettingsSection>
+
+      <SettingsSection title="Workspaces">
+        <WorkspaceList />
+      </SettingsSection>
+    </>
   )
 }
 

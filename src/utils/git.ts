@@ -1,17 +1,16 @@
 import git from "isomorphic-git"
 import http from "isomorphic-git/http/web"
 import { GitHubRepository, GitHubUser } from "../schema"
-import { fs, fsWipe } from "./fs"
+import { fs } from "./fs"
 import { startTimer } from "./timer"
 
-export const REPO_DIR = "/repo"
 const DEFAULT_BRANCH = "main"
 
-export async function gitClone(repo: GitHubRepository, user: GitHubUser) {
+export async function gitClone(repo: GitHubRepository, user: GitHubUser, dir: string) {
   const options: Parameters<typeof git.clone>[0] = {
     fs,
     http,
-    dir: REPO_DIR,
+    dir,
     // corsProxy: "https://cors.isomorphic-git.org",
     corsProxy: "/cors-proxy",
     url: `https://github.com/${repo.owner}/${repo.name}`,
@@ -23,11 +22,6 @@ export async function gitClone(repo: GitHubRepository, user: GitHubUser) {
     onAuth: () => ({ username: user.login, password: user.token }),
   }
 
-  // Wipe file system
-  // TODO: Only remove the repo directory instead of wiping the entire file system
-  // Blocked by https://github.com/isomorphic-git/lightning-fs/issues/71
-  fsWipe()
-
   // Clone repo
   let stopTimer = startTimer(`git clone ${options.url} ${options.dir}`)
   await git.clone(options)
@@ -35,20 +29,20 @@ export async function gitClone(repo: GitHubRepository, user: GitHubUser) {
 
   // Set user in git config
   stopTimer = startTimer(`git config user.name "${user.name}"`)
-  await git.setConfig({ fs, dir: REPO_DIR, path: "user.name", value: user.name })
+  await git.setConfig({ fs, dir, path: "user.name", value: user.name })
   stopTimer()
 
   // Set email in git config
   stopTimer = startTimer(`git config user.email "${user.email}"`)
-  await git.setConfig({ fs, dir: REPO_DIR, path: "user.email", value: user.email })
+  await git.setConfig({ fs, dir, path: "user.email", value: user.email })
   stopTimer()
 }
 
-export async function gitPull(user: GitHubUser) {
+export async function gitPull(user: GitHubUser, dir: string) {
   const options: Parameters<typeof git.pull>[0] = {
     fs,
     http,
-    dir: REPO_DIR,
+    dir,
     singleBranch: true,
     onMessage: (message) => console.debug("onMessage", message),
     onProgress: (progress) => console.debug("onProgress", progress),
@@ -60,11 +54,11 @@ export async function gitPull(user: GitHubUser) {
   stopTimer()
 }
 
-export async function gitPush(user: GitHubUser) {
+export async function gitPush(user: GitHubUser, dir: string) {
   const options: Parameters<typeof git.push>[0] = {
     fs,
     http,
-    dir: REPO_DIR,
+    dir,
     onMessage: (message) => console.debug("onMessage", message),
     onProgress: (progress) => console.debug("onProgress", progress),
     onAuth: () => ({ username: user.login, password: user.token }),
@@ -75,10 +69,10 @@ export async function gitPush(user: GitHubUser) {
   stopTimer()
 }
 
-export async function gitAdd(filePaths: string[]) {
+export async function gitAdd(filePaths: string[], dir: string) {
   const options: Parameters<typeof git.add>[0] = {
     fs,
-    dir: REPO_DIR,
+    dir,
     filepath: filePaths,
   }
 
@@ -87,10 +81,10 @@ export async function gitAdd(filePaths: string[]) {
   stopTimer()
 }
 
-export async function gitRemove(filePath: string) {
+export async function gitRemove(filePath: string, dir: string) {
   const options: Parameters<typeof git.remove>[0] = {
     fs,
-    dir: REPO_DIR,
+    dir,
     filepath: filePath,
   }
 
@@ -99,10 +93,10 @@ export async function gitRemove(filePath: string) {
   stopTimer()
 }
 
-export async function gitCommit(message: string) {
+export async function gitCommit(message: string, dir: string) {
   const options: Parameters<typeof git.commit>[0] = {
     fs,
-    dir: REPO_DIR,
+    dir,
     message,
   }
 
@@ -112,16 +106,16 @@ export async function gitCommit(message: string) {
 }
 
 /** Check if the repo is synced with the remote origin */
-export async function isRepoSynced() {
+export async function isRepoSynced(dir: string) {
   const latestLocalCommit = await git.resolveRef({
     fs,
-    dir: REPO_DIR,
+    dir,
     ref: `refs/heads/${DEFAULT_BRANCH}`,
   })
 
   const latestRemoteCommit = await git.resolveRef({
     fs,
-    dir: REPO_DIR,
+    dir,
     ref: `refs/remotes/origin/${DEFAULT_BRANCH}`,
   })
 
@@ -130,11 +124,11 @@ export async function isRepoSynced() {
   return isSynced
 }
 
-export async function getRemoteOriginUrl() {
+export async function getRemoteOriginUrl(dir: string) {
   // Check git config for remote origin url
   const remoteOriginUrl = await git.getConfig({
     fs,
-    dir: REPO_DIR,
+    dir,
     path: "remote.origin.url",
   })
 

@@ -4,6 +4,7 @@ import { atom } from "jotai"
 import { atomWithMachine } from "jotai-xstate"
 import { atomWithStorage, selectAtom } from "jotai/utils"
 import { assign, createMachine, raise } from "xstate"
+import { v4 as uuidv4 } from "uuid"
 import { z } from "zod"
 import {
   Font,
@@ -12,12 +13,13 @@ import {
   Note,
   NoteId,
   Template,
+  Workspace,
   githubUserSchema,
   templateSchema,
+  workspaceSchema,
 } from "./schema"
-import { fs, fsWipe } from "./utils/fs"
+import { fs, fsDeleteDir, fsWipe } from "./utils/fs"
 import {
-  REPO_DIR,
   getRemoteOriginUrl,
   gitAdd,
   gitClone,
@@ -38,10 +40,22 @@ import { startTimer } from "./utils/timer"
 
 const GITHUB_USER_STORAGE_KEY = "github_user" as const
 const MARKDOWN_FILES_STORAGE_KEY = "markdown_files" as const
+const WORKSPACES_STORAGE_KEY = "workspaces" as const
+const ACTIVE_WORKSPACE_ID_KEY = "active_workspace_id" as const
+
+// The legacy single-repo clone lives at "/repo" for backward compatibility
+const LEGACY_WORKSPACE_ID = "legacy"
+const LEGACY_REPO_DIR = "/repo"
+
+export function getWorkspaceDir(workspaceId: string): string {
+  if (workspaceId === LEGACY_WORKSPACE_ID) return LEGACY_REPO_DIR
+  return `/repos/${workspaceId}`
+}
 
 type Context = {
   githubUser: GitHubUser | null
-  githubRepo: GitHubRepository | null
+  workspaces: Workspace[]
+  activeWorkspaceId: string | null
   markdownFiles: Record<string, string>
   error: Error | null
 }
@@ -49,7 +63,9 @@ type Context = {
 type Event =
   | { type: "SIGN_IN"; githubUser: GitHubUser }
   | { type: "SIGN_OUT" }
-  | { type: "SELECT_REPO"; githubRepo: GitHubRepository }
+  | { type: "ADD_WORKSPACE"; workspace: Workspace }
+  | { type: "SELECT_WORKSPACE"; workspaceId: string }
+  | { type: "REMOVE_WORKSPACE"; workspaceId: string }
   | { type: "SYNC" }
   | { type: "SYNC_DEBOUNCED" }
   | {
@@ -59,12 +75,32 @@ type Event =
     }
   | { type: "DELETE_FILE"; filepath: string }
 
+function parseWorkspacesFromStorage(): Workspace[] {
+  try {
+    const raw = localStorage.getItem(WORKSPACES_STORAGE_KEY)
+    if (!raw) return []
+    const data = JSON.parse(raw)
+    return z.array(workspaceSchema).parse(data)
+  } catch {
+    return []
+  }
+}
+
+function saveWorkspacesToStorage(workspaces: Workspace[]) {
+  localStorage.setItem(WORKSPACES_STORAGE_KEY, JSON.stringify(workspaces))
+}
+
+function getActiveWorkspace(context: Context): Workspace | null {
+  return context.workspaces.find((w) => w.id === context.activeWorkspaceId) ?? null
+}
+
 function createGlobalStateMachine() {
+  const initialWorkspaces = parseWorkspacesFromStorage()
+  const initialActiveWorkspaceId = localStorage.getItem(ACTIVE_WORKSPACE_ID_KEY)
+
   return createMachine(
     {
-      /** @xstate-layout N4IgpgJg5mDOIC5RQDYHsBGBDFA6ATnGigG4CWAdlAKqxj4DEEaFYulJaA1m6pjgSKlKNOvgQc0AYywAXMiwDaABgC6K1YlAAHNLDLyWWkAA9EAFgDsuABwBmS8qcBWSwEZnygGxu3AGhAAT0QAJhDzXEsvAE5lSxtY6OdfEJsAXzSAvmw8QlhicipaegZ6fDR8XG0UOQAzCoBbXGyBPIKRYvFJGUMKDQ1jXX1e4zMEEPdcaOmvOxCvELt7BwDghDdlaNtHczdwkOc7Nys7DKz0HNx9KFYIAHkAV1kGAGUASQBxADkAfTevgZIEBDAwKCijRBeZxeXDQkKxGzhZz2BKrUJHXAHRx2KEbBLI06ZEAtPDXW5vCivT6-O7UAAqgJ0elBRiBY2c5i2HiiyWiXnizhCaIQ5nCuHMuy8NjcPnM-Ls0TOxIuAjJkApgnywioACUwLomCw2JIeM0VaSyDd1RRNe1dfq0BIKJwemD+mpBsyRmzEABaczOXBeWaihLHaI2Vx2YWWOwRZQBqVeZRuabxEJKklXS3km1tbVQPUGsoVKo1WT1fBNLNqiAa-OFQsOp0uuRutSM4FesEQ8ZWIOC5SHQ5xGzuLzC5EhcXjzxzNzuMeZ83Zq11m0UNCyADC6FurwAogAZA-buk-HUHgAKd07IO9oHZi0xx05CcR0UszmFXn7ouDvjOHyEqxsu-AWmuGpSHuIhFmghqsOwzrcLwK61lBMH2roLbSG2Sgdh6QL3j2PoIPENi2BKOIuAs8LmMKsSBhMHhJAk-52IS5zgauua4NBLCwQ6pT4OUlTVHUjRmtx6E2vxFCCdh3R4X0BGaER3aso+iA2Modi4Hs0LJnKrgxDGbh6Rxw52Mo9iCg4YGXDJfF7pAh4nmeF7XrehFMsMJFaQgdkvhKsTmB+X7Cr4MqRAuSzRCEC4JvMDmqjm1rOUaEB8QAFlgVDGhAKBgAwADqOpvHSB4-AAYm8J4vHeGngqRn64MoqROP+rjSlCkUKtYNnmBxlgShyn7pESNZpeuGW3DleUwOwhXFQAIseB6VTVdUHo1fmaaYiCtUB9gylK5jtUBliRXK07JMGg7ddC5gpRBvFyZA835bgADu+CglQ1VkEVsAIcayGmlNkGyS5WVSLlX2-f9UCA8DOGuvh6g+V2e3NQF0LKG10RLKmuxyjYsyRcOkSzNEC6cjpoqWC9PHpe9sPw4tiPyADQNwMJollhJVZSY500YZln2c393PI7zsBo8p7pqb5LK4wdZFxkG5kKp+exxnElN2IGURLOEsS-u1E1caLUOzR9cMLWwEBgEVMso8VzCISaqHSWL0MSw7X3O67IjuwrvRK56OO9q4BNE7FJkLPYkWIgNsYJVEmzeEOzNOWzktOy7YBu7z-OluJFaSZDb0wwXuDB8Xoe8+H7aY8r2Oq72sYRBszh95Y47eCn-YhDZsxLAqGxuFbyq+7b+ewIEFBSFcDxSFIcAgy8ACaXzbrtnekR4ek6eEewRvEST0UE6Lmfp1l8sBTi00zk1oX7dtZYvy+r+vm+vLvbcPw1oACFaR7wPCtA+D51ajzcJEDkiwgIJjhEOYUYRkRtTmCmcy3gvyIlzh-BeS8V4lkYDvPe0D-Lqw5JiU+PgOQmzxN+G+CAjjxFhFYICCoozSkIfPWu39SEiQqAAvewCDxgOoBAqBWNiL7TGAGSiDhPBODUU4CcrCjjzExLTYM+iDHOH4TXCWQj65gAwGgB4y8RBiP3nIpqXc5h0OSHCFhaxFi7EiLpPYnJpj+KMW-OeJi5pmOdpY6xUhbEUKAaA8B25IFUIUdpSw04pRhD0QY-k6DR4wg5KdLJ-JjGs0ESQ8xESbFUAYCYWAsg5BsCwLUWQ9AAAUGwnAAEoGDVxKaYsp4SrGVKgEktWYx4gRAHhdRwY4EhRHQQqCIY5AnW1SgIvpP9tAPBQCgWxnswacAhu-NZoSymbO2SIFuGMRm9hiIGOIA8cRhWfjYGw6CFjwOhPYdq08IzFJmsQjZWydlVLIYLSuwsen-NKYC85VBLkqTblHQ+AUGG4FNpyPxY5fxXVYQcTBDg5j7AOMNP54sTkwuBVABg1zSKykxJM+Y4QsVWHQckCi08Uxxl8MGbwyzZ42xCR9MxmzYDZV2UaJCByfYCt6eSleIqxVwqUhHVSSKYFjOhITVJUpoRJDxOg6InJMQ6vJmOVMY5X4rNerKoVpyHiitsaCiulZqxHMFV-O1DqlXIXRgimlKKnCwn5BMWY9hGLRHQS8wMrhkQCiWFCKwpL-ZyqqPaxVVL-XqzpRMRwjKwpRBZbimwQ1772DjeTRhSbP5XDKXDMAUguAiBeHU2Q9rQaSpQiLVZ7qa0-zrQ2ptLb7XwsjupaOpFPDTjmIKRY-J3DuMQNg6chq-HHAStKBcVaAUr37Y2qgza5Btr2R2w5wSbUer7dlete6oAHtbfLZVrdFBuHbvI0Z2kdHT3eYiHwi4I1aNHsukKtNRTT18Ja-l3bz29p3Vegd+6h0gydeWF1XbrVQvWbB69g7D0Pp9YrVVY7kXq1SYGWmOlXCD00WsOYkxclm12NrLwW7oVYfg7exDdjM1jCSHk1J8wpSOE2HyYU1k+6RE5CNC2PhDUscwzlbDCHcN2IkVImR3HDqatcQsBdbC9gwnhAUwpgSiSbmdvAIEJI1XULGL6BcWwdjWWTPohm0ZWG+jSfCWNrgyaCjlMzBsHQxDWeSWwiI85iYhvarGJIwpi3bATL44lxwRp-MeLIEL77AoKnFMkSZcwuELAYhEMIUIFg62YsWpNmXex2YxI57OLmExubWJyPSVgZRDTJnsdwVbAtYTQDV0iHn4Hcr7pPemUZJyRlhIy9w869bPSCTKmam4dwwyG3jHLRxkxwksgW6bcdxxdalD1twcn5IDc2+rIaWwhyIlSB+cy5McVrHGUGaZYVrJluY8tqDGHbjXds-YbxQ1GvBlc5Fc1kQdKT2OLMvlkKyX2w5mAIHfojag6c94CHzXIqpAM7D2m8PPyI7ddBwOi0yDLXR+sacXmYgKg4kcJIr3EDHA2FMXShr5QfiWBdlHjsfrSybsDWnUY2ocvcP1Ma1H2cEph9z3wYVScC-ZkLhuJciri8mHFSMAmEoOH8KwmUrhqYcQzqbImM8kfJttcvWnvprJTHjl+JIs6EgtdCL4O7kpClFL++h5HF6V6wDXhvWAFmVbqsXRRVIuwUQJTCGOa+HiDgUV0nA3B-Ipxq5g7gMhtOFxtW8Iic6VhZgbDZ2ws+mIhzBkcL+F5yVA8swB-bleAzIkiFpyNaNco+QKh5XL8YEwKLFoDL4Jz+CMyt7zqx1NsKoC97lJEDiF8WfJBsqy7wtgq9EsOPZOfRCF8Kp70RmPZFRSwh6gGS+5NYtFs1nf+Kl1Z0Qdt9Wsxu6cP3t76mcUYlCMaYZ7QUUTGyCyLFNMPuY4EzNIIAA */
       id: "global",
-      tsTypes: {} as import("./global-state.typegen").Typegen0,
       schema: {} as {
         context: Context
         events: Event
@@ -74,8 +110,8 @@ function createGlobalStateMachine() {
           }
           resolveRepo: {
             data: {
-              githubRepo: GitHubRepository
               markdownFiles: Record<string, string>
+              migratedWorkspace?: Workspace
             }
           }
           cloneRepo: {
@@ -102,7 +138,8 @@ function createGlobalStateMachine() {
       initial: "resolvingUser",
       context: {
         githubUser: null,
-        githubRepo: null,
+        workspaces: initialWorkspaces,
+        activeWorkspaceId: initialActiveWorkspaceId,
         markdownFiles: {},
         error: null,
       },
@@ -144,18 +181,22 @@ function createGlobalStateMachine() {
                 src: "resolveRepo",
                 onDone: {
                   target: "cloned",
-                  actions: ["setGitHubRepo", "setMarkdownFiles", "setMarkdownFilesLocalStorage"],
+                  actions: [
+                    "applyMigratedWorkspace",
+                    "setMarkdownFiles",
+                    "setMarkdownFilesLocalStorage",
+                  ],
                 },
                 onError: "notCloned",
               },
             },
             notCloned: {
               on: {
-                SELECT_REPO: "cloningRepo",
+                ADD_WORKSPACE: "cloningRepo",
               },
             },
             cloningRepo: {
-              entry: ["setGitHubRepo", "clearMarkdownFiles", "clearMarkdownFilesLocalStorage"],
+              entry: ["setActiveWorkspace", "clearMarkdownFiles", "clearMarkdownFilesLocalStorage"],
               invoke: {
                 src: "cloneRepo",
                 onDone: {
@@ -164,14 +205,28 @@ function createGlobalStateMachine() {
                 },
                 onError: {
                   target: "notCloned",
-                  actions: ["clearGitHubRepo", "setError"],
+                  actions: ["revertActiveWorkspaceOnError", "setError"],
                 },
               },
             },
             cloned: {
               entry: "logUser",
               on: {
-                SELECT_REPO: "cloningRepo",
+                ADD_WORKSPACE: "cloningRepo",
+                SELECT_WORKSPACE: {
+                  target: "cloningRepo",
+                  actions: "setActiveWorkspaceId",
+                },
+                REMOVE_WORKSPACE: [
+                  {
+                    cond: "isRemovingActiveWorkspace",
+                    target: "resolvingRepo",
+                    actions: "removeWorkspace",
+                  },
+                  {
+                    actions: "removeWorkspace",
+                  },
+                ],
               },
               type: "parallel",
               states: {
@@ -295,7 +350,11 @@ function createGlobalStateMachine() {
     {
       guards: {
         isOffline: () => !navigator.onLine,
-        isSynced: (_, event) => event.data.isSynced,
+        isSynced: (_, event) => (event as unknown as { data: { isSynced: boolean } }).data.isSynced,
+        isRemovingActiveWorkspace: (context, event) => {
+          const e = event as { type: "REMOVE_WORKSPACE"; workspaceId: string }
+          return e.workspaceId === context.activeWorkspaceId
+        },
       },
       services: {
         resolveUser: async () => {
@@ -331,57 +390,99 @@ function createGlobalStateMachine() {
           const githubUser = JSON.parse(localStorage.getItem(GITHUB_USER_STORAGE_KEY) ?? "null")
           return { githubUser: githubUserSchema.parse(githubUser) }
         },
-        resolveRepo: async () => {
+        resolveRepo: async (context) => {
           const stopTimer = startTimer("resolveRepo()")
 
-          const remoteOriginUrl = await getRemoteOriginUrl()
+          const workspace = getActiveWorkspace(context)
 
-          // Remove https://github.com/ from the beginning of the URL to get the repo name
-          const repo = String(remoteOriginUrl).replace(/^https:\/\/github.com\//, "")
+          // Migration: no workspaces yet, but legacy repo may exist at /repo
+          if (!workspace) {
+            const remoteOriginUrl = await getRemoteOriginUrl(LEGACY_REPO_DIR)
+            const repo = String(remoteOriginUrl).replace(/^https:\/\/github.com\//, "")
+            const [owner, name] = repo.split("/")
 
-          const [owner, name] = repo.split("/")
+            if (!owner || !name) throw new Error("No workspace configured")
 
-          if (!owner || !name) {
-            throw new Error("Invalid repo")
+            const migratedWorkspace: Workspace = {
+              id: LEGACY_WORKSPACE_ID,
+              name: "My Notes",
+              githubRepo: { owner, name },
+              notesPath: "",
+              uploadsPath: "",
+            }
+
+            const markdownFiles =
+              getMarkdownFilesFromLocalStorage() ??
+              (await getMarkdownFilesFromFs(LEGACY_REPO_DIR, ""))
+
+            stopTimer()
+            return { markdownFiles, migratedWorkspace }
           }
 
-          const githubRepo = { owner, name }
-
+          const dir = getWorkspaceDir(workspace.id)
           const markdownFiles =
-            getMarkdownFilesFromLocalStorage() ?? (await getMarkdownFilesFromFs(REPO_DIR))
+            getMarkdownFilesFromLocalStorage() ??
+            (await getMarkdownFilesFromFs(dir, workspace.notesPath))
 
           stopTimer()
-
-          return { githubRepo, markdownFiles }
+          return { markdownFiles }
         },
-        cloneRepo: async (context, event) => {
+        cloneRepo: async (context) => {
           if (!context.githubUser) throw new Error("Not signed in")
 
-          await gitClone(event.githubRepo, context.githubUser)
+          const workspace = getActiveWorkspace(context)
+          if (!workspace) throw new Error("No workspace selected")
+
+          const dir = getWorkspaceDir(workspace.id)
+
+          // Prepare directory: delete existing contents, then ensure dir exists
+          await fsDeleteDir(dir)
+          if (dir !== LEGACY_REPO_DIR) {
+            await fs.promises.mkdir("/repos").catch(() => {})
+            await fs.promises.mkdir(dir).catch(() => {})
+          }
+
+          await gitClone(workspace.githubRepo, context.githubUser, dir)
 
           return {
-            markdownFiles: await getMarkdownFilesFromFs(REPO_DIR),
+            markdownFiles: await getMarkdownFilesFromFs(dir, workspace.notesPath),
           }
         },
         pull: async (context) => {
           if (!context.githubUser) throw new Error("Not signed in")
 
-          await gitPull(context.githubUser)
+          const workspace = getActiveWorkspace(context)
+          if (!workspace) throw new Error("No workspace selected")
+
+          const dir = getWorkspaceDir(workspace.id)
+          await gitPull(context.githubUser, dir)
 
           return {
-            markdownFiles: await getMarkdownFilesFromFs(REPO_DIR),
+            markdownFiles: await getMarkdownFilesFromFs(dir, workspace.notesPath),
           }
         },
         push: async (context) => {
           if (!context.githubUser) throw new Error("Not signed in")
 
-          await gitPush(context.githubUser)
+          const workspace = getActiveWorkspace(context)
+          if (!workspace) throw new Error("No workspace selected")
+
+          await gitPush(context.githubUser, getWorkspaceDir(workspace.id))
         },
-        checkStatus: async () => {
-          return { isSynced: await isRepoSynced() }
+        checkStatus: async (context) => {
+          const workspace = getActiveWorkspace(context)
+          if (!workspace) return { isSynced: true }
+          return { isSynced: await isRepoSynced(getWorkspaceDir(workspace.id)) }
         },
         writeFiles: async (context, event) => {
           if (!context.githubUser) throw new Error("Not signed in")
+          if (event.type !== "WRITE_FILES") throw new Error("Invalid event")
+
+          const workspace = getActiveWorkspace(context)
+          if (!workspace) throw new Error("No workspace selected")
+
+          const dir = getWorkspaceDir(workspace.id)
+          const notesPath = workspace.notesPath
 
           const entries = Object.entries(event.markdownFiles)
           const filesToWrite = entries.filter(([, content]) => content !== null)
@@ -389,87 +490,92 @@ function createGlobalStateMachine() {
           const fileList = entries.map(([filepath]) => filepath)
           const commitMessage = event.commitMessage ?? `Update ${fileList.join(" ") || "notes"}`
 
-          // Write files to file system
+          // Write files to file system (paths are relative to notesPath)
           for (const [filepath, content] of filesToWrite) {
             if (content === null) continue
 
-            // Create directories if needed
-            const dirPath = filepath.split("/").slice(0, -1).join("/")
-            if (dirPath) {
-              let currentPath = REPO_DIR
-              const segments = dirPath.split("/")
+            // Full path within repo: notesPath/filepath
+            const repoFilepath = notesPath ? `${notesPath}/${filepath}` : filepath
+            const dirPath = repoFilepath.split("/").slice(0, -1).join("/")
 
-              for (const segment of segments) {
+            if (dirPath) {
+              let currentPath = dir
+              for (const segment of dirPath.split("/")) {
                 currentPath = `${currentPath}/${segment}`
                 const stats = await fs.promises.stat(currentPath).catch(() => null)
-                const exists = stats !== null
-                if (!exists) {
-                  await fs.promises.mkdir(currentPath)
-                }
+                if (!stats) await fs.promises.mkdir(currentPath)
               }
             }
 
-            // Write file
-            await fs.promises.writeFile(`${REPO_DIR}/${filepath}`, content, "utf8")
+            await fs.promises.writeFile(`${dir}/${repoFilepath}`, content, "utf8")
           }
 
           // Delete files from file system
           for (const [filepath] of filesToDelete) {
-            await fs.promises.unlink(`${REPO_DIR}/${filepath}`).catch(() => null)
+            const repoFilepath = notesPath ? `${notesPath}/${filepath}` : filepath
+            await fs.promises.unlink(`${dir}/${repoFilepath}`).catch(() => null)
           }
 
-          // Stage files
-          const filesToAdd = filesToWrite.map(([filepath]) => filepath)
-          if (filesToAdd.length > 0) {
-            await gitAdd(filesToAdd)
+          // Stage files (git paths are relative to repo root)
+          const gitPathsToAdd = filesToWrite.map(([filepath]) =>
+            notesPath ? `${notesPath}/${filepath}` : filepath,
+          )
+          if (gitPathsToAdd.length > 0) {
+            await gitAdd(gitPathsToAdd, dir)
           }
 
           for (const [filepath] of filesToDelete) {
+            const repoFilepath = notesPath ? `${notesPath}/${filepath}` : filepath
             try {
-              await gitRemove(filepath)
+              await gitRemove(repoFilepath, dir)
             } catch {
               // Ignore if the file isn't tracked
             }
           }
 
-          // Commit files
-          await gitCommit(commitMessage)
+          await gitCommit(commitMessage, dir)
         },
         deleteFile: async (context, event) => {
           if (!context.githubUser) throw new Error("Not signed in")
+          if (event.type !== "DELETE_FILE") throw new Error("Invalid event")
 
-          const { filepath } = event
+          const workspace = getActiveWorkspace(context)
+          if (!workspace) throw new Error("No workspace selected")
 
-          // Delete file from file system
-          await fs.promises.unlink(`${REPO_DIR}/${filepath}`)
+          const dir = getWorkspaceDir(workspace.id)
+          const notesPath = workspace.notesPath
+          const repoFilepath = notesPath ? `${notesPath}/${event.filepath}` : event.filepath
 
-          // Stage deletion
-          await gitRemove(filepath)
-
-          // Commit deletion
-          await gitCommit(`Delete ${filepath}`)
+          await fs.promises.unlink(`${dir}/${repoFilepath}`)
+          await gitRemove(repoFilepath, dir)
+          await gitCommit(`Delete ${event.filepath}`, dir)
         },
       },
       actions: {
         setGitHubUser: assign({
-          githubUser: (_, event) => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          githubUser: (_, event: any) => {
             switch (event.type) {
               case "SIGN_IN":
-                return event.githubUser
+                return event.githubUser as GitHubUser
               case "done.invoke.global.resolvingUser:invocation[0]":
-                return event.data.githubUser
+                return (event.data as { githubUser: GitHubUser }).githubUser
               default:
                 return null
             }
           },
         }),
-        setGitHubUserLocalStorage: (_, event) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        setGitHubUserLocalStorage: (_: Context, event: any) => {
           switch (event.type) {
             case "SIGN_IN":
               localStorage.setItem(GITHUB_USER_STORAGE_KEY, JSON.stringify(event.githubUser))
               break
             case "done.invoke.global.resolvingUser:invocation[0]":
-              localStorage.setItem(GITHUB_USER_STORAGE_KEY, JSON.stringify(event.data.githubUser))
+              localStorage.setItem(
+                GITHUB_USER_STORAGE_KEY,
+                JSON.stringify((event.data as { githubUser: GitHubUser }).githubUser),
+              )
               break
           }
         },
@@ -479,33 +585,111 @@ function createGlobalStateMachine() {
         clearGitHubUserLocalStorage: () => {
           localStorage.removeItem(GITHUB_USER_STORAGE_KEY)
         },
-        setGitHubRepo: assign({
-          githubRepo: (_, event) => {
-            switch (event.type) {
-              case "SELECT_REPO":
-                return event.githubRepo
-              case "done.invoke.global.signedIn.resolvingRepo:invocation[0]":
-                return event.data.githubRepo
-            }
+        // Applies the workspace migrated from the legacy single-repo format
+        applyMigratedWorkspace: assign({
+          workspaces: (context, event) => {
+            const data = (event as unknown as { data: { migratedWorkspace?: Workspace } }).data
+            if (!data.migratedWorkspace) return context.workspaces
+            const already = context.workspaces.find((w) => w.id === data.migratedWorkspace!.id)
+            if (already) return context.workspaces
+            const updated = [...context.workspaces, data.migratedWorkspace]
+            saveWorkspacesToStorage(updated)
+            return updated
+          },
+          activeWorkspaceId: (context, event) => {
+            const data = (event as unknown as { data: { migratedWorkspace?: Workspace } }).data
+            if (!data.migratedWorkspace) return context.activeWorkspaceId
+            localStorage.setItem(ACTIVE_WORKSPACE_ID_KEY, data.migratedWorkspace.id)
+            return data.migratedWorkspace.id
           },
         }),
-        clearGitHubRepo: assign({
-          githubRepo: null,
+        // Sets the active workspace when ADD_WORKSPACE is dispatched (adds to list + sets active)
+        setActiveWorkspace: assign({
+          workspaces: (context, event) => {
+            if (event.type !== "ADD_WORKSPACE") return context.workspaces
+            const updated = [...context.workspaces, event.workspace]
+            saveWorkspacesToStorage(updated)
+            return updated
+          },
+          activeWorkspaceId: (context, event) => {
+            if (event.type !== "ADD_WORKSPACE") return context.activeWorkspaceId
+            localStorage.setItem(ACTIVE_WORKSPACE_ID_KEY, event.workspace.id)
+            return event.workspace.id
+          },
+        }),
+        // Sets just the active workspace ID when SELECT_WORKSPACE is dispatched
+        setActiveWorkspaceId: assign({
+          activeWorkspaceId: (context, event) => {
+            if (event.type !== "SELECT_WORKSPACE") return context.activeWorkspaceId
+            localStorage.setItem(ACTIVE_WORKSPACE_ID_KEY, event.workspaceId)
+            return event.workspaceId
+          },
+        }),
+        // If a clone fails for a new workspace, remove it from the list
+        revertActiveWorkspaceOnError: assign({
+          workspaces: (context) => {
+            // Only revert if the active workspace was just added (not pre-existing)
+            const workspace = getActiveWorkspace(context)
+            if (!workspace) return context.workspaces
+            const isLegacy = workspace.id === LEGACY_WORKSPACE_ID
+            if (isLegacy) return context.workspaces
+            // If there was more than one workspace before, revert to the previous list
+            if (context.workspaces.length <= 1) return context.workspaces
+            // Remove the workspace that failed to clone
+            const updated = context.workspaces.filter((w) => w.id !== context.activeWorkspaceId)
+            saveWorkspacesToStorage(updated)
+            return updated
+          },
+          activeWorkspaceId: (context) => {
+            const workspace = getActiveWorkspace(context)
+            if (!workspace || workspace.id === LEGACY_WORKSPACE_ID) return context.activeWorkspaceId
+            if (context.workspaces.length <= 1) return context.activeWorkspaceId
+            const remaining = context.workspaces.filter((w) => w.id !== context.activeWorkspaceId)
+            const newActiveId = remaining[0]?.id ?? null
+            if (newActiveId) localStorage.setItem(ACTIVE_WORKSPACE_ID_KEY, newActiveId)
+            return newActiveId
+          },
+        }),
+        removeWorkspace: assign({
+          workspaces: (context, event) => {
+            if (event.type !== "REMOVE_WORKSPACE") return context.workspaces
+            const updated = context.workspaces.filter((w) => w.id !== event.workspaceId)
+            saveWorkspacesToStorage(updated)
+            return updated
+          },
+          activeWorkspaceId: (context, event) => {
+            if (event.type !== "REMOVE_WORKSPACE") return context.activeWorkspaceId
+            if (context.activeWorkspaceId !== event.workspaceId) return context.activeWorkspaceId
+            const remaining = context.workspaces.filter((w) => w.id !== event.workspaceId)
+            const newActiveId = remaining[0]?.id ?? null
+            if (newActiveId) localStorage.setItem(ACTIVE_WORKSPACE_ID_KEY, newActiveId)
+            else localStorage.removeItem(ACTIVE_WORKSPACE_ID_KEY)
+            return newActiveId
+          },
         }),
         clearFileSystem: () => {
           fsWipe()
         },
         setMarkdownFiles: assign({
-          markdownFiles: (_, event) => event.data.markdownFiles,
+          markdownFiles: (_, event) =>
+            (event as unknown as { data: { markdownFiles: Record<string, string> } }).data
+              .markdownFiles,
         }),
         setSampleMarkdownFiles: assign({
           markdownFiles: getSampleMarkdownFiles(),
         }),
         setMarkdownFilesLocalStorage: (_, event) => {
-          localStorage.setItem(MARKDOWN_FILES_STORAGE_KEY, JSON.stringify(event.data.markdownFiles))
+          localStorage.setItem(
+            MARKDOWN_FILES_STORAGE_KEY,
+            JSON.stringify(
+              (event as unknown as { data: { markdownFiles: Record<string, string> } }).data
+                .markdownFiles,
+            ),
+          )
         },
         mergeMarkdownFiles: assign({
           markdownFiles: (context, event) => {
+            if (event.type !== "WRITE_FILES") return context.markdownFiles
             const merged = { ...context.markdownFiles }
             for (const [filepath, content] of Object.entries(event.markdownFiles)) {
               if (content === null) {
@@ -518,6 +702,7 @@ function createGlobalStateMachine() {
           },
         }),
         mergeMarkdownFilesLocalStorage: (context, event) => {
+          if (event.type !== "WRITE_FILES") return
           const merged = { ...context.markdownFiles }
           for (const [filepath, content] of Object.entries(event.markdownFiles)) {
             if (content === null) {
@@ -530,11 +715,13 @@ function createGlobalStateMachine() {
         },
         deleteMarkdownFile: assign({
           markdownFiles: (context, event) => {
+            if (event.type !== "DELETE_FILE") return context.markdownFiles
             const { [event.filepath]: _, ...markdownFiles } = context.markdownFiles
             return markdownFiles
           },
         }),
         deleteMarkdownFileLocalStorage: (context, event) => {
+          if (event.type !== "DELETE_FILE") return
           const { [event.filepath]: _, ...markdownFiles } = context.markdownFiles
           localStorage.setItem(MARKDOWN_FILES_STORAGE_KEY, JSON.stringify(markdownFiles))
         },
@@ -546,10 +733,10 @@ function createGlobalStateMachine() {
         },
         setError: assign({
           // TODO: Remove `as Error`
-          error: (_, event) => event.data as Error,
+          error: (_, event) => (event as unknown as { data: Error }).data as Error,
         }),
         logError: (_, event) => {
-          console.error(event.data)
+          console.error((event as unknown as { data: unknown }).data)
         },
         logUser: (context) => {
           if (import.meta.env.DEV) return
@@ -574,9 +761,15 @@ function getMarkdownFilesFromLocalStorage() {
   return parsedMarkdownFiles.success ? parsedMarkdownFiles.data : null
 }
 
-/** Walk the file system and return the contents of all markdown files */
-async function getMarkdownFilesFromFs(dir: string) {
+/**
+ * Walk the file system and return the contents of all markdown files.
+ * When notesPath is set, only files within that subdirectory are returned,
+ * with paths relative to notesPath (not the repo root).
+ */
+async function getMarkdownFilesFromFs(dir: string, notesPath: string) {
   const stopTimer = startTimer("getMarkdownFilesFromFs()")
+
+  const prefix = notesPath ? `${notesPath}/` : ""
 
   const entries = await git.walk({
     fs,
@@ -588,17 +781,23 @@ async function getMarkdownFilesFromFs(dir: string) {
       // Ignore .git directory
       if (filepath.startsWith(".git")) return
 
+      // If notesPath is set, ignore files outside of it
+      if (prefix && !filepath.startsWith(prefix)) return
+
+      // Strip the notesPath prefix so note IDs are relative to notesPath
+      const noteFilepath = prefix ? filepath.slice(prefix.length) : filepath
+
       // Ignore non-markdown files
-      if (!filepath.endsWith(".md")) return
+      if (!noteFilepath.endsWith(".md")) return
 
       // Get file content
       const content = await entry.content()
 
       if (!content) return null
 
-      console.debug(filepath, (await entry.stat()).size)
+      console.debug(noteFilepath, (await entry.stat()).size)
 
-      return [filepath, new TextDecoder().decode(content)]
+      return [noteFilepath, new TextDecoder().decode(content)]
     },
   })
 
@@ -633,7 +832,7 @@ export const isSignedOutAtom = selectAtom(globalStateMachineAtom, (state) =>
 )
 
 // -----------------------------------------------------------------------------
-// GitHub
+// GitHub / Workspaces
 // -----------------------------------------------------------------------------
 
 export const githubUserAtom = selectAtom(
@@ -641,10 +840,31 @@ export const githubUserAtom = selectAtom(
   (state) => state.context.githubUser,
 )
 
-export const githubRepoAtom = selectAtom(
+export const workspacesAtom = selectAtom(
   globalStateMachineAtom,
-  (state) => state.context.githubRepo,
+  (state) => state.context.workspaces,
 )
+
+export const activeWorkspaceAtom = atom((get) => {
+  const state = get(globalStateMachineAtom)
+  const { workspaces, activeWorkspaceId } = state.context
+  return workspaces.find((w) => w.id === activeWorkspaceId) ?? null
+})
+
+/** The GitHub repo of the currently active workspace (for backward compatibility) */
+export const githubRepoAtom = atom((get) => {
+  const workspace = get(activeWorkspaceAtom)
+  return workspace?.githubRepo ?? null
+})
+
+/** The filesystem directory of the currently active workspace's git clone */
+export const activeRepoDirAtom = atom((get) => {
+  const state = get(globalStateMachineAtom)
+  const { workspaces, activeWorkspaceId } = state.context
+  const workspace = workspaces.find((w) => w.id === activeWorkspaceId)
+  if (!workspace) return LEGACY_REPO_DIR
+  return getWorkspaceDir(workspace.id)
+})
 
 // -----------------------------------------------------------------------------
 // Notes
@@ -859,6 +1079,8 @@ export const taskSearcherAtom = atom((get) => {
 
 export const epaperAtom = atomWithStorage<boolean>("epaper", false)
 
+export const colorSchemeAtom = atomWithStorage<"system" | "light" | "dark">("color_scheme", "system")
+
 export const vimModeAtom = atomWithStorage<boolean>("vim-mode", false)
 
 export const defaultFontAtom = atomWithStorage<Font>("font", "sans")
@@ -875,8 +1097,13 @@ export const calendarLayoutAtom = atomWithStorage<"week" | "month">("calendar-la
 
 export const OPENAI_KEY_STORAGE_KEY = "openai_key"
 
+export const ENV_OPENAI_KEY = (import.meta.env.VITE_OPENAI_KEY as string) || ""
+
 export const openaiKeyAtom = atomWithStorage<string>(OPENAI_KEY_STORAGE_KEY, "")
 
-export const hasOpenAIKeyAtom = selectAtom(openaiKeyAtom, (key) => key !== "")
+export const hasOpenAIKeyAtom = selectAtom(openaiKeyAtom, (key) => key !== "" || ENV_OPENAI_KEY !== "")
 
 export const voiceAssistantEnabledAtom = atomWithStorage<boolean>("voice_assistant_enabled", false)
+
+// Export uuidv4 for use in WorkspaceForm
+export { uuidv4 }
