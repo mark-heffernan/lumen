@@ -27,6 +27,13 @@ export async function GET(request: Request): Promise<Response> {
 
     const { id, login, name, email } = await getUser(token)
 
+    const ALLOWED_LOGINS = ["mark-heffernan"]
+    if (!ALLOWED_LOGINS.includes(login)) {
+      return new Response("Access restricted: this app is currently in private beta.", {
+        status: 403,
+      })
+    }
+
     const redirectUrl = new URL(state || "https://uselumen.com")
     redirectUrl.searchParams.set("user_token", token)
     if (typeof id === "number" && Number.isFinite(id)) {
