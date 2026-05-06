@@ -1,14 +1,32 @@
 import { Root } from "mdast"
 import { Extension as FromMarkdownExtension } from "mdast-util-from-markdown"
 import { codes } from "micromark-util-symbol/codes"
-import { Code, Construct, Extension, HtmlExtension, State, Tokenizer } from "micromark-util-types"
+import {
+  Code,
+  CompileContext,
+  Construct,
+  Extension,
+  HtmlExtension,
+  State,
+  Token,
+  TokenType,
+  Tokenizer,
+} from "micromark-util-types"
 import { Plugin } from "unified"
 import { Node } from "unist"
 
+declare module "micromark-util-types" {
+  interface TokenTypeMap {
+    priority: never
+    priorityMarker: never
+    priorityLevel: never
+  }
+}
+
 const types = {
-  priority: "priority",
-  priorityMarker: "priorityMarker",
-  priorityLevel: "priorityLevel",
+  priority: "priority" as TokenType,
+  priorityMarker: "priorityMarker" as TokenType,
+  priorityLevel: "priorityLevel" as TokenType,
 }
 
 /** Syntax extension (text -> tokens) */
@@ -69,7 +87,7 @@ export function priority(): Extension {
 export function priorityHtml(): HtmlExtension {
   return {
     enter: {
-      [types.priorityLevel](token) {
+      [types.priorityLevel](this: CompileContext, token: Token) {
         const level = this.sliceSerialize(token)
         this.tag(`<priority level="${level}" />`)
       },

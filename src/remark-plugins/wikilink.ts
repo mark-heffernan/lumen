@@ -1,16 +1,37 @@
 import { Root } from "mdast"
 import { Extension as FromMarkdownExtension } from "mdast-util-from-markdown"
 import { codes } from "micromark-util-symbol/codes"
-import { Code, Construct, Extension, HtmlExtension, State, Tokenizer } from "micromark-util-types"
+import {
+  Code,
+  CompileContext,
+  Construct,
+  Extension,
+  HtmlExtension,
+  State,
+  Token,
+  TokenType,
+  Tokenizer,
+} from "micromark-util-types"
 import { Plugin } from "unified"
 import { Node } from "unist"
 
+// Register custom token types with micromark's TokenTypeMap
+declare module "micromark-util-types" {
+  interface TokenTypeMap {
+    wikilink: never
+    wikilinkMarker: never
+    wikilinkId: never
+    wikilinkSeparator: never
+    wikilinkText: never
+  }
+}
+
 const types = {
-  wikilink: "wikilink",
-  wikilinkMarker: "wikilinkMarker",
-  wikilinkId: "wikilinkId",
-  wikilinkSeparator: "wikilinkSeparator",
-  wikilinkText: "wikilinkText",
+  wikilink: "wikilink" as TokenType,
+  wikilinkMarker: "wikilinkMarker" as TokenType,
+  wikilinkId: "wikilinkId" as TokenType,
+  wikilinkSeparator: "wikilinkSeparator" as TokenType,
+  wikilinkText: "wikilinkText" as TokenType,
 }
 
 /** Syntax extension (text -> tokens) */
@@ -183,15 +204,15 @@ export function wikilinkHtml(): HtmlExtension {
 
   return {
     enter: {
-      [types.wikilinkId](token) {
+      [types.wikilinkId](this: CompileContext, token: Token) {
         id = this.sliceSerialize(token)
       },
-      [types.wikilinkText](token) {
+      [types.wikilinkText](this: CompileContext, token: Token) {
         text = this.sliceSerialize(token)
       },
     },
     exit: {
-      [types.wikilink]() {
+      [types.wikilink](this: CompileContext) {
         this.tag(`<wikilink id="${id}" text="${text || ""}" />`)
 
         // Reset state

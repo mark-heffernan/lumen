@@ -15,10 +15,24 @@ import { fontSchema, widthSchema } from "../schema"
 import { getLeadingEmoji, removeLeadingEmoji } from "../utils/emoji"
 import { cx } from "../utils/cx"
 import { parseNote } from "../utils/parse-note"
+import { Note } from "../schema"
+
+type GistData = {
+  description?: string | null
+  html_url?: string
+  updated_at?: string | null
+  owner?: { login?: string; avatar_url?: string }
+  files?: Record<string, { filename?: string; content?: string } | null>
+}
+
+type GistLoaderData = {
+  gist: GistData | null
+  note: Note | null
+}
 
 export const Route = createFileRoute("/share/$gistId")({
   component: RouteComponent,
-  loader: async ({ params }) => {
+  loader: async ({ params }): Promise<GistLoaderData> => {
     const gistId = params.gistId
 
     try {
@@ -58,7 +72,8 @@ export const Route = createFileRoute("/share/$gistId")({
     }
   },
   head: ({ loaderData }) => {
-    const { gist, note } = loaderData
+    const gist = loaderData?.gist
+    const note = loaderData?.note
     const title = note?.title || gist?.description || note?.displayName || "Lumen"
     const emoji = getLeadingEmoji(title) || "📝"
     const encodedEmoji = encodeURIComponent(emoji)

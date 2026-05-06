@@ -3,20 +3,32 @@ import { Extension as FromMarkdownExtension } from "mdast-util-from-markdown"
 import { codes } from "micromark-util-symbol/codes"
 import {
   Code,
+  CompileContext,
   Construct,
   Extension,
   HtmlExtension,
   Previous,
   State,
+  Token,
+  TokenType,
   Tokenizer,
 } from "micromark-util-types"
 import { Plugin } from "unified"
 import { Node } from "unist"
 
+// Register custom token types with micromark's TokenTypeMap
+declare module "micromark-util-types" {
+  interface TokenTypeMap {
+    tag: never
+    tagMarker: never
+    tagName: never
+  }
+}
+
 const types = {
-  tag: "tag",
-  tagMarker: "tagMarker",
-  tagName: "tagName",
+  tag: "tag" as TokenType,
+  tagMarker: "tagMarker" as TokenType,
+  tagName: "tagName" as TokenType,
 }
 
 /** Syntax extension (text -> tokens) */
@@ -133,7 +145,7 @@ function isNameChar(code: Code): boolean {
 export function tagHtml(): HtmlExtension {
   return {
     enter: {
-      [types.tagName](token) {
+      [types.tagName](this: CompileContext, token: Token) {
         const name = this.sliceSerialize(token)
         this.tag(`<tag name="${name}" />`)
       },

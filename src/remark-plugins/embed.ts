@@ -3,16 +3,36 @@
 import { Root } from "mdast"
 import { Extension as FromMarkdownExtension } from "mdast-util-from-markdown"
 import { codes } from "micromark-util-symbol/codes"
-import { Code, Construct, Extension, HtmlExtension, State, Tokenizer } from "micromark-util-types"
+import {
+  Code,
+  CompileContext,
+  Construct,
+  Extension,
+  HtmlExtension,
+  State,
+  Token,
+  TokenType,
+  Tokenizer,
+} from "micromark-util-types"
 import { Plugin } from "unified"
 import { Node } from "unist"
 
+declare module "micromark-util-types" {
+  interface TokenTypeMap {
+    embed: never
+    embedMarker: never
+    embedId: never
+    embedSeparator: never
+    embedText: never
+  }
+}
+
 const types = {
-  embed: "embed",
-  embedMarker: "embedMarker",
-  embedId: "embedId",
-  embedSeparator: "embedSeparator",
-  embedText: "embedText",
+  embed: "embed" as TokenType,
+  embedMarker: "embedMarker" as TokenType,
+  embedId: "embedId" as TokenType,
+  embedSeparator: "embedSeparator" as TokenType,
+  embedText: "embedText" as TokenType,
 }
 
 /** Syntax extension (text -> tokens) */
@@ -198,15 +218,15 @@ export function embedHtml(): HtmlExtension {
 
   return {
     enter: {
-      [types.embedId](token) {
+      [types.embedId](this: CompileContext, token: Token) {
         id = this.sliceSerialize(token)
       },
-      [types.embedText](token) {
+      [types.embedText](this: CompileContext, token: Token) {
         text = this.sliceSerialize(token)
       },
     },
     exit: {
-      [types.embed]() {
+      [types.embed](this: CompileContext) {
         this.tag(`<embed id="${id}" text="${text || id}" />`)
 
         // Reset state

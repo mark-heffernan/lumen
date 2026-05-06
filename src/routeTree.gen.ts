@@ -8,230 +8,93 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-// Import Routes
+import { Route as rootRouteImport } from './routes/__root'
+import { Route as AiRouteImport } from './routes/ai'
+import { Route as AppRootRouteImport } from './routes/_appRoot'
+import { Route as AppRootIndexRouteImport } from './routes/_appRoot.index'
+import { Route as ShareGistIdRouteImport } from './routes/share.$gistId'
+import { Route as AppRootSettingsRouteImport } from './routes/_appRoot.settings'
+import { Route as AppRootFileRouteImport } from './routes/_appRoot.file'
+import { Route as AppRootTagsIndexRouteImport } from './routes/_appRoot.tags.index'
+import { Route as AppRootNotesIndexRouteImport } from './routes/_appRoot.notes.index'
+import { Route as AppRootDocsIndexRouteImport } from './routes/_appRoot.docs.index'
+import { Route as AppRootTagsSplatRouteImport } from './routes/_appRoot.tags_.$'
+import { Route as AppRootNotesSplatRouteImport } from './routes/_appRoot.notes_.$'
+import { Route as AppRootDocsDocRouteImport } from './routes/_appRoot.docs_.$doc'
 
-import { Route as rootRoute } from './routes/__root'
-import { Route as AiImport } from './routes/ai'
-import { Route as AppRootImport } from './routes/_appRoot'
-import { Route as AppRootIndexImport } from './routes/_appRoot.index'
-import { Route as ShareGistIdImport } from './routes/share.$gistId'
-import { Route as AppRootSettingsImport } from './routes/_appRoot.settings'
-import { Route as AppRootFileImport } from './routes/_appRoot.file'
-import { Route as AppRootTagsIndexImport } from './routes/_appRoot.tags.index'
-import { Route as AppRootNotesIndexImport } from './routes/_appRoot.notes.index'
-import { Route as AppRootDocsIndexImport } from './routes/_appRoot.docs.index'
-import { Route as AppRootTagsSplatImport } from './routes/_appRoot.tags_.$'
-import { Route as AppRootNotesSplatImport } from './routes/_appRoot.notes_.$'
-import { Route as AppRootDocsDocImport } from './routes/_appRoot.docs_.$doc'
-
-// Create/Update Routes
-
-const AiRoute = AiImport.update({
+const AiRoute = AiRouteImport.update({
   id: '/ai',
   path: '/ai',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const AppRootRoute = AppRootImport.update({
+const AppRootRoute = AppRootRouteImport.update({
   id: '/_appRoot',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const AppRootIndexRoute = AppRootIndexImport.update({
+const AppRootIndexRoute = AppRootIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AppRootRoute,
 } as any)
-
-const ShareGistIdRoute = ShareGistIdImport.update({
+const ShareGistIdRoute = ShareGistIdRouteImport.update({
   id: '/share/$gistId',
   path: '/share/$gistId',
-  getParentRoute: () => rootRoute,
+  getParentRoute: () => rootRouteImport,
 } as any)
-
-const AppRootSettingsRoute = AppRootSettingsImport.update({
+const AppRootSettingsRoute = AppRootSettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
   getParentRoute: () => AppRootRoute,
 } as any)
-
-const AppRootFileRoute = AppRootFileImport.update({
+const AppRootFileRoute = AppRootFileRouteImport.update({
   id: '/file',
   path: '/file',
   getParentRoute: () => AppRootRoute,
 } as any)
-
-const AppRootTagsIndexRoute = AppRootTagsIndexImport.update({
+const AppRootTagsIndexRoute = AppRootTagsIndexRouteImport.update({
   id: '/tags/',
   path: '/tags/',
   getParentRoute: () => AppRootRoute,
 } as any)
-
-const AppRootNotesIndexRoute = AppRootNotesIndexImport.update({
+const AppRootNotesIndexRoute = AppRootNotesIndexRouteImport.update({
   id: '/notes/',
   path: '/notes/',
   getParentRoute: () => AppRootRoute,
 } as any)
-
-const AppRootDocsIndexRoute = AppRootDocsIndexImport.update({
+const AppRootDocsIndexRoute = AppRootDocsIndexRouteImport.update({
   id: '/docs/',
   path: '/docs/',
   getParentRoute: () => AppRootRoute,
 } as any)
-
-const AppRootTagsSplatRoute = AppRootTagsSplatImport.update({
+const AppRootTagsSplatRoute = AppRootTagsSplatRouteImport.update({
   id: '/tags_/$',
   path: '/tags/$',
   getParentRoute: () => AppRootRoute,
 } as any)
-
-const AppRootNotesSplatRoute = AppRootNotesSplatImport.update({
+const AppRootNotesSplatRoute = AppRootNotesSplatRouteImport.update({
   id: '/notes_/$',
   path: '/notes/$',
   getParentRoute: () => AppRootRoute,
 } as any)
-
-const AppRootDocsDocRoute = AppRootDocsDocImport.update({
+const AppRootDocsDocRoute = AppRootDocsDocRouteImport.update({
   id: '/docs_/$doc',
   path: '/docs/$doc',
   getParentRoute: () => AppRootRoute,
 } as any)
 
-// Populate the FileRoutesByPath interface
-
-declare module '@tanstack/react-router' {
-  interface FileRoutesByPath {
-    '/_appRoot': {
-      id: '/_appRoot'
-      path: ''
-      fullPath: ''
-      preLoaderRoute: typeof AppRootImport
-      parentRoute: typeof rootRoute
-    }
-    '/ai': {
-      id: '/ai'
-      path: '/ai'
-      fullPath: '/ai'
-      preLoaderRoute: typeof AiImport
-      parentRoute: typeof rootRoute
-    }
-    '/_appRoot/file': {
-      id: '/_appRoot/file'
-      path: '/file'
-      fullPath: '/file'
-      preLoaderRoute: typeof AppRootFileImport
-      parentRoute: typeof AppRootImport
-    }
-    '/_appRoot/settings': {
-      id: '/_appRoot/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof AppRootSettingsImport
-      parentRoute: typeof AppRootImport
-    }
-    '/share/$gistId': {
-      id: '/share/$gistId'
-      path: '/share/$gistId'
-      fullPath: '/share/$gistId'
-      preLoaderRoute: typeof ShareGistIdImport
-      parentRoute: typeof rootRoute
-    }
-    '/_appRoot/': {
-      id: '/_appRoot/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof AppRootIndexImport
-      parentRoute: typeof AppRootImport
-    }
-    '/_appRoot/docs_/$doc': {
-      id: '/_appRoot/docs_/$doc'
-      path: '/docs/$doc'
-      fullPath: '/docs/$doc'
-      preLoaderRoute: typeof AppRootDocsDocImport
-      parentRoute: typeof AppRootImport
-    }
-    '/_appRoot/notes_/$': {
-      id: '/_appRoot/notes_/$'
-      path: '/notes/$'
-      fullPath: '/notes/$'
-      preLoaderRoute: typeof AppRootNotesSplatImport
-      parentRoute: typeof AppRootImport
-    }
-    '/_appRoot/tags_/$': {
-      id: '/_appRoot/tags_/$'
-      path: '/tags/$'
-      fullPath: '/tags/$'
-      preLoaderRoute: typeof AppRootTagsSplatImport
-      parentRoute: typeof AppRootImport
-    }
-    '/_appRoot/docs/': {
-      id: '/_appRoot/docs/'
-      path: '/docs'
-      fullPath: '/docs'
-      preLoaderRoute: typeof AppRootDocsIndexImport
-      parentRoute: typeof AppRootImport
-    }
-    '/_appRoot/notes/': {
-      id: '/_appRoot/notes/'
-      path: '/notes'
-      fullPath: '/notes'
-      preLoaderRoute: typeof AppRootNotesIndexImport
-      parentRoute: typeof AppRootImport
-    }
-    '/_appRoot/tags/': {
-      id: '/_appRoot/tags/'
-      path: '/tags'
-      fullPath: '/tags'
-      preLoaderRoute: typeof AppRootTagsIndexImport
-      parentRoute: typeof AppRootImport
-    }
-  }
-}
-
-// Create and export the route tree
-
-interface AppRootRouteChildren {
-  AppRootFileRoute: typeof AppRootFileRoute
-  AppRootSettingsRoute: typeof AppRootSettingsRoute
-  AppRootIndexRoute: typeof AppRootIndexRoute
-  AppRootDocsDocRoute: typeof AppRootDocsDocRoute
-  AppRootNotesSplatRoute: typeof AppRootNotesSplatRoute
-  AppRootTagsSplatRoute: typeof AppRootTagsSplatRoute
-  AppRootDocsIndexRoute: typeof AppRootDocsIndexRoute
-  AppRootNotesIndexRoute: typeof AppRootNotesIndexRoute
-  AppRootTagsIndexRoute: typeof AppRootTagsIndexRoute
-}
-
-const AppRootRouteChildren: AppRootRouteChildren = {
-  AppRootFileRoute: AppRootFileRoute,
-  AppRootSettingsRoute: AppRootSettingsRoute,
-  AppRootIndexRoute: AppRootIndexRoute,
-  AppRootDocsDocRoute: AppRootDocsDocRoute,
-  AppRootNotesSplatRoute: AppRootNotesSplatRoute,
-  AppRootTagsSplatRoute: AppRootTagsSplatRoute,
-  AppRootDocsIndexRoute: AppRootDocsIndexRoute,
-  AppRootNotesIndexRoute: AppRootNotesIndexRoute,
-  AppRootTagsIndexRoute: AppRootTagsIndexRoute,
-}
-
-const AppRootRouteWithChildren =
-  AppRootRoute._addFileChildren(AppRootRouteChildren)
-
 export interface FileRoutesByFullPath {
-  '': typeof AppRootRouteWithChildren
+  '/': typeof AppRootIndexRoute
   '/ai': typeof AiRoute
   '/file': typeof AppRootFileRoute
   '/settings': typeof AppRootSettingsRoute
   '/share/$gistId': typeof ShareGistIdRoute
-  '/': typeof AppRootIndexRoute
   '/docs/$doc': typeof AppRootDocsDocRoute
   '/notes/$': typeof AppRootNotesSplatRoute
   '/tags/$': typeof AppRootTagsSplatRoute
-  '/docs': typeof AppRootDocsIndexRoute
-  '/notes': typeof AppRootNotesIndexRoute
-  '/tags': typeof AppRootTagsIndexRoute
+  '/docs/': typeof AppRootDocsIndexRoute
+  '/notes/': typeof AppRootNotesIndexRoute
+  '/tags/': typeof AppRootTagsIndexRoute
 }
-
 export interface FileRoutesByTo {
   '/ai': typeof AiRoute
   '/file': typeof AppRootFileRoute
@@ -245,9 +108,8 @@ export interface FileRoutesByTo {
   '/notes': typeof AppRootNotesIndexRoute
   '/tags': typeof AppRootTagsIndexRoute
 }
-
 export interface FileRoutesById {
-  __root__: typeof rootRoute
+  __root__: typeof rootRouteImport
   '/_appRoot': typeof AppRootRouteWithChildren
   '/ai': typeof AiRoute
   '/_appRoot/file': typeof AppRootFileRoute
@@ -261,22 +123,20 @@ export interface FileRoutesById {
   '/_appRoot/notes/': typeof AppRootNotesIndexRoute
   '/_appRoot/tags/': typeof AppRootTagsIndexRoute
 }
-
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | ''
+    | '/'
     | '/ai'
     | '/file'
     | '/settings'
     | '/share/$gistId'
-    | '/'
     | '/docs/$doc'
     | '/notes/$'
     | '/tags/$'
-    | '/docs'
-    | '/notes'
-    | '/tags'
+    | '/docs/'
+    | '/notes/'
+    | '/tags/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/ai'
@@ -306,90 +166,133 @@ export interface FileRouteTypes {
     | '/_appRoot/tags/'
   fileRoutesById: FileRoutesById
 }
-
 export interface RootRouteChildren {
   AppRootRoute: typeof AppRootRouteWithChildren
   AiRoute: typeof AiRoute
   ShareGistIdRoute: typeof ShareGistIdRoute
 }
 
+declare module '@tanstack/react-router' {
+  interface FileRoutesByPath {
+    '/ai': {
+      id: '/ai'
+      path: '/ai'
+      fullPath: '/ai'
+      preLoaderRoute: typeof AiRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_appRoot': {
+      id: '/_appRoot'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AppRootRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_appRoot/': {
+      id: '/_appRoot/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof AppRootIndexRouteImport
+      parentRoute: typeof AppRootRoute
+    }
+    '/share/$gistId': {
+      id: '/share/$gistId'
+      path: '/share/$gistId'
+      fullPath: '/share/$gistId'
+      preLoaderRoute: typeof ShareGistIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_appRoot/settings': {
+      id: '/_appRoot/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AppRootSettingsRouteImport
+      parentRoute: typeof AppRootRoute
+    }
+    '/_appRoot/file': {
+      id: '/_appRoot/file'
+      path: '/file'
+      fullPath: '/file'
+      preLoaderRoute: typeof AppRootFileRouteImport
+      parentRoute: typeof AppRootRoute
+    }
+    '/_appRoot/tags/': {
+      id: '/_appRoot/tags/'
+      path: '/tags'
+      fullPath: '/tags/'
+      preLoaderRoute: typeof AppRootTagsIndexRouteImport
+      parentRoute: typeof AppRootRoute
+    }
+    '/_appRoot/notes/': {
+      id: '/_appRoot/notes/'
+      path: '/notes'
+      fullPath: '/notes/'
+      preLoaderRoute: typeof AppRootNotesIndexRouteImport
+      parentRoute: typeof AppRootRoute
+    }
+    '/_appRoot/docs/': {
+      id: '/_appRoot/docs/'
+      path: '/docs'
+      fullPath: '/docs/'
+      preLoaderRoute: typeof AppRootDocsIndexRouteImport
+      parentRoute: typeof AppRootRoute
+    }
+    '/_appRoot/tags_/$': {
+      id: '/_appRoot/tags_/$'
+      path: '/tags/$'
+      fullPath: '/tags/$'
+      preLoaderRoute: typeof AppRootTagsSplatRouteImport
+      parentRoute: typeof AppRootRoute
+    }
+    '/_appRoot/notes_/$': {
+      id: '/_appRoot/notes_/$'
+      path: '/notes/$'
+      fullPath: '/notes/$'
+      preLoaderRoute: typeof AppRootNotesSplatRouteImport
+      parentRoute: typeof AppRootRoute
+    }
+    '/_appRoot/docs_/$doc': {
+      id: '/_appRoot/docs_/$doc'
+      path: '/docs/$doc'
+      fullPath: '/docs/$doc'
+      preLoaderRoute: typeof AppRootDocsDocRouteImport
+      parentRoute: typeof AppRootRoute
+    }
+  }
+}
+
+interface AppRootRouteChildren {
+  AppRootFileRoute: typeof AppRootFileRoute
+  AppRootSettingsRoute: typeof AppRootSettingsRoute
+  AppRootIndexRoute: typeof AppRootIndexRoute
+  AppRootDocsDocRoute: typeof AppRootDocsDocRoute
+  AppRootNotesSplatRoute: typeof AppRootNotesSplatRoute
+  AppRootTagsSplatRoute: typeof AppRootTagsSplatRoute
+  AppRootDocsIndexRoute: typeof AppRootDocsIndexRoute
+  AppRootNotesIndexRoute: typeof AppRootNotesIndexRoute
+  AppRootTagsIndexRoute: typeof AppRootTagsIndexRoute
+}
+
+const AppRootRouteChildren: AppRootRouteChildren = {
+  AppRootFileRoute: AppRootFileRoute,
+  AppRootSettingsRoute: AppRootSettingsRoute,
+  AppRootIndexRoute: AppRootIndexRoute,
+  AppRootDocsDocRoute: AppRootDocsDocRoute,
+  AppRootNotesSplatRoute: AppRootNotesSplatRoute,
+  AppRootTagsSplatRoute: AppRootTagsSplatRoute,
+  AppRootDocsIndexRoute: AppRootDocsIndexRoute,
+  AppRootNotesIndexRoute: AppRootNotesIndexRoute,
+  AppRootTagsIndexRoute: AppRootTagsIndexRoute,
+}
+
+const AppRootRouteWithChildren =
+  AppRootRoute._addFileChildren(AppRootRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   AppRootRoute: AppRootRouteWithChildren,
   AiRoute: AiRoute,
   ShareGistIdRoute: ShareGistIdRoute,
 }
-
-export const routeTree = rootRoute
+export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-/* ROUTE_MANIFEST_START
-{
-  "routes": {
-    "__root__": {
-      "filePath": "__root.tsx",
-      "children": [
-        "/_appRoot",
-        "/ai",
-        "/share/$gistId"
-      ]
-    },
-    "/_appRoot": {
-      "filePath": "_appRoot.tsx",
-      "children": [
-        "/_appRoot/file",
-        "/_appRoot/settings",
-        "/_appRoot/",
-        "/_appRoot/docs_/$doc",
-        "/_appRoot/notes_/$",
-        "/_appRoot/tags_/$",
-        "/_appRoot/docs/",
-        "/_appRoot/notes/",
-        "/_appRoot/tags/"
-      ]
-    },
-    "/ai": {
-      "filePath": "ai.tsx"
-    },
-    "/_appRoot/file": {
-      "filePath": "_appRoot.file.tsx",
-      "parent": "/_appRoot"
-    },
-    "/_appRoot/settings": {
-      "filePath": "_appRoot.settings.tsx",
-      "parent": "/_appRoot"
-    },
-    "/share/$gistId": {
-      "filePath": "share.$gistId.tsx"
-    },
-    "/_appRoot/": {
-      "filePath": "_appRoot.index.tsx",
-      "parent": "/_appRoot"
-    },
-    "/_appRoot/docs_/$doc": {
-      "filePath": "_appRoot.docs_.$doc.tsx",
-      "parent": "/_appRoot"
-    },
-    "/_appRoot/notes_/$": {
-      "filePath": "_appRoot.notes_.$.tsx",
-      "parent": "/_appRoot"
-    },
-    "/_appRoot/tags_/$": {
-      "filePath": "_appRoot.tags_.$.tsx",
-      "parent": "/_appRoot"
-    },
-    "/_appRoot/docs/": {
-      "filePath": "_appRoot.docs.index.tsx",
-      "parent": "/_appRoot"
-    },
-    "/_appRoot/notes/": {
-      "filePath": "_appRoot.notes.index.tsx",
-      "parent": "/_appRoot"
-    },
-    "/_appRoot/tags/": {
-      "filePath": "_appRoot.tags.index.tsx",
-      "parent": "/_appRoot"
-    }
-  }
-}
-ROUTE_MANIFEST_END */
