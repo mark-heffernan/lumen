@@ -1,5 +1,7 @@
+
 # Status
 
 | URL                                                      | Status                                                                                                                                                               |
 | :------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [githubstatus.com](https://www.githubstatus.com/) |  |
+| [githubstatus.com](https://www.githubstatus.com/) | |
+| [vercel-status.com](https://www.vercel-status.com) | |

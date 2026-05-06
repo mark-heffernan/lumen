@@ -1,9 +1,10 @@
+
 # Keyboard shortcuts
 
 | Action              | Shortcut                  |
 | ------------------- | ------------------------- |
 | Toggle command menu | <kbd>⌘</kbd> <kbd>K</kbd> |
-| Create new note     | <kbd>⌘</kbd> <kbd>I</kbd> |
+| Create new note     | <kbd>⌘</kbd> <kbd>⇧</kbd> <kbd>O</kbd> |
 
 **With focus inside a note card...**
 

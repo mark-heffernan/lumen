@@ -1,3 +1,4 @@
+
 # Metadata
 
 You can include metadata, in the form of key-value pairs ([YAML](https://yaml.org/)), at the top of any note, enclosed within `---` delimiters. We refer to this as your note's "frontmatter".
@@ -28,3 +29,4 @@ Frontmatter can contain any valid YAML key-value pairs. However, there are a few
 | `image`    | Image URL or markdown image syntax | Used as the Open Graph image when sharing the note. Can be a URL (e.g., `https://example.com/image.jpg`) or markdown image syntax (e.g., `![alt text](https://example.com/image.jpg)`). |
 | `isbn`     | Book ISBN-10 or ISBN-13            | Adds an image of the book cover and an [Open Library](https://openlibrary.org/) link to the top of the note.                                                                            |
 | `birthday` | Birthday (`YYYY-MM-DD` or `MM-DD`) | Displays time until the next birthday.                                                                                                                                                  |
+| `url`     | IMDB url e.g. [`tt0123456`](https://www.imdb.com/title/tt23561236/)             | Adds an image of the film or TV show cover and an [IMDB](https://www.imdb.com/) link to the top of the note.

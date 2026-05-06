@@ -1,3 +1,4 @@
+
 # Templates
 
 Any note can be turned into a template by adding a `template` property to the note's [frontmatter](/docs/metadata.md) with details about the template.

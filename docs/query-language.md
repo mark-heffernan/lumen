@@ -1,3 +1,4 @@
+
 # Query language
 
 Search your notes with Lumen's [GitHub-style](https://docs.github.com/en/search-github/searching-on-github/searching-issues-and-pull-requests) query language. Here's how it works:

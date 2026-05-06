@@ -1,3 +1,4 @@
+
 # Markdown syntax
 
 Lumen supports [GitHub Flavored Markdown](https://github.github.com/gfm/) with the following syntax extensions:
