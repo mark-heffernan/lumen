@@ -27,14 +27,15 @@ export async function GET(request: Request): Promise<Response> {
 
     const { id, login, name, email } = await getUser(token)
 
-    const ALLOWED_LOGINS = ["mark-heffernan"]
-    if (!ALLOWED_LOGINS.includes(login)) {
+    const allowedLogins = (process.env.ALLOWED_GITHUB_LOGINS || "").split(",").map((s) => s.trim()).filter(Boolean)
+    if (allowedLogins.length > 0 && !allowedLogins.includes(login)) {
       return new Response("Access restricted: this app is currently in private beta.", {
         status: 403,
       })
     }
 
-    const redirectUrl = new URL(state || "https://lumen-delta-eight.vercel.app")
+    const appUrl = process.env.APP_URL || "https://lumen-delta-eight.vercel.app"
+    const redirectUrl = new URL(state || appUrl)
     redirectUrl.searchParams.set("user_token", token)
     if (typeof id === "number" && Number.isFinite(id)) {
       redirectUrl.searchParams.set("user_id", String(id))
