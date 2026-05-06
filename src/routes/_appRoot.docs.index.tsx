@@ -9,6 +9,7 @@ const docs = [
   { slug: "query-language", title: "Query language" },
   { slug: "status", title: "Status" },
   { slug: "templates", title: "Templates" },
+  { slug: "CHANGELOG", title: "Changelog" },
 ]
 
 export const Route = createFileRoute("/_appRoot/docs/")({
