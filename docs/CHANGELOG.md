@@ -2,6 +2,10 @@
 
 ## 2026-W19
 
+### Removed
+
+- **`api/log-user`** — removed the upstream developer's analytics endpoint and its corresponding `logUser` state machine action. The function logged each app open to an external Supabase database; without `SUPABASE_URL` and `SUPABASE_SERVICE_KEY` env vars it threw a 500 error on every page load, filling Vercel logs with noise. Not needed for a self-hosted deployment.
+
 ### Improved
 
 ### Package updates

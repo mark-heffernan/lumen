@@ -210,7 +210,6 @@ function createGlobalStateMachine() {
               },
             },
             cloned: {
-              entry: "logUser",
               on: {
                 ADD_WORKSPACE: "cloningRepo",
                 SELECT_WORKSPACE: {
@@ -737,16 +736,6 @@ function createGlobalStateMachine() {
         }),
         logError: (_, event) => {
           console.error((event as unknown as { data: unknown }).data)
-        },
-        logUser: (context) => {
-          if (import.meta.env.DEV) return
-          const token = context.githubUser?.token
-          if (token) {
-            fetch("/api/log-user", {
-              method: "POST",
-              headers: { Authorization: `Bearer ${token}` },
-            }).catch(() => {})
-          }
         },
       },
     },
