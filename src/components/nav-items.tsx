@@ -145,7 +145,7 @@ export function NavItems({
                       icon={
                         <NoteFavicon
                           note={note}
-                          className="epaper:[[aria-current=page]_&]:text-bg"
+                          className="epaper:in-aria-[aria-current=page]:text-bg"
                         />
                       }
                       className="w-0 flex-1"
@@ -162,7 +162,7 @@ export function NavItems({
         <div className="flex flex-col gap-1">
           {needRefresh ? (
             <button className="nav-item" data-size={size} onClick={() => updateServiceWorker(true)}>
-              <div className="grid size-4 place-items-center [&>*]:row-span-full [&>*]:col-span-full">
+              <div className="grid size-4 place-items-center *:row-span-full *:col-span-full">
                 <div className="size-3 rounded-full bg-border-focus opacity-50 animate-ping" />
                 <div className="size-2 rounded-full bg-border-focus" />
               </div>
@@ -211,14 +211,6 @@ export function NavItems({
             </button>
           ) : null}
           <NavLink
-            to="/docs"
-            icon={<BookIcon16 />}
-            className="text-text-secondary"
-            onNavigate={onNavigate}
-          >
-            Docs
-          </NavLink>
-          <NavLink
             to="/settings"
             search={{ query: undefined }}
             activeIcon={<SettingsFillIcon16 />}
@@ -227,6 +219,14 @@ export function NavItems({
             onNavigate={onNavigate}
           >
             Settings
+          </NavLink>
+          <NavLink
+            to="/docs"
+            icon={<BookIcon16 />}
+            className="text-text-secondary"
+            onNavigate={onNavigate}
+          >
+            Docs
           </NavLink>
           <HelpNavItem size={size} />
         </div>
