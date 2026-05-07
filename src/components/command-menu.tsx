@@ -360,6 +360,7 @@ export function CommandMenu() {
               {tagResults.length > numVisibleTags ? (
                 <CommandItem
                   key={`Show all tags matching "${deferredQuery}"`}
+                  value={`show-all-tags-${deferredQuery}`}
                   icon={<SearchIcon16 />}
                   onSelect={handleSelect(() =>
                     navigate({
@@ -401,6 +402,7 @@ export function CommandMenu() {
               {noteResults.length > 0 ? (
                 <CommandItem
                   key={`Show all notes matching "${deferredQuery}"`}
+                  value={`show-all-notes-${deferredQuery}`}
                   icon={<SearchIcon16 />}
                   onSelect={handleSelect(() =>
                     navigate({
@@ -417,6 +419,7 @@ export function CommandMenu() {
               ) : null}
               <CommandItem
                 key={`Create new note "${deferredQuery}"`}
+                value={`create-new-note-${deferredQuery}`}
                 icon={<PlusIcon16 />}
                 onSelect={handleSelect(() => {
                   const note = {

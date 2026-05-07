@@ -2,6 +2,8 @@
 
 ## 2026-W19
 
+### Improved
+
 ### Package updates
 
 All dependencies updated to latest compatible versions across 7 phases.
@@ -25,6 +27,29 @@ All dependencies updated to latest compatible versions across 7 phases.
 - `vite` 5 → 8
 - `eslint` 8 → 9
 - `typescript` 5 → 6
+
+### Fixed
+
+### Bug fix: cmd-k palette crash on "Show all" / "Create new note"
+
+Arrowing down to the "Show all N notes matching …" or "Create new note …" items in the cmd-k search palette caused the app to crash.
+
+**Root cause:** `cmdk` tracks list items internally using a `querySelector` built from each item's `data-value` attribute. When no explicit `value` prop is supplied, cmdk falls back to the item's rendered text content. Both action items wrap the search query in decorative double-quotes (e.g. `matching "linux"`), which broke the generated CSS selector:
+
+```
+querySelector('[data-value="show all 1 note matching "linux""]')
+//                                                   ^ terminates the string early
+```
+
+**Fix:** Added explicit `value` props (quote-free) to the three affected `CommandItem` elements in `src/components/command-menu.tsx`:
+
+| Item | `value` prop |
+|---|---|
+| Show all tags | `` `show-all-tags-${query}` `` |
+| Show all notes | `` `show-all-notes-${query}` `` |
+| Create new note | `` `create-new-note-${query}` `` |
+
+The displayed text (with its decorative quotes) is unchanged.
 
 ## 2026-W08
 
