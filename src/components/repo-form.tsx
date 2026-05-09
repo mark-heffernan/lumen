@@ -14,6 +14,11 @@ import { RadioGroup } from "./radio-group"
 import { TextInput } from "./text-input"
 import { FormControl } from "./form-control"
 
+type GitHubRepo = {
+  full_name: string
+  private: boolean
+}
+
 type WorkspaceFormProps = {
   className?: string
   onSubmit?: (workspace: Workspace) => void
@@ -27,6 +32,41 @@ export function WorkspaceForm({ className, onSubmit, onCancel }: WorkspaceFormPr
   const [repoType, setRepoType] = React.useState<"new" | "existing">("existing")
   const [isLoading, setIsLoading] = React.useState(false)
   const [error, setError] = React.useState<Error | null>(null)
+  const [repos, setRepos] = React.useState<GitHubRepo[]>([])
+  const [reposLoading, setReposLoading] = React.useState(false)
+  const [reposError, setReposError] = React.useState<string | null>(null)
+
+  // Fetch user's repos when in "existing" mode
+  React.useEffect(() => {
+    if (repoType !== "existing" || !githubUser?.token) return
+
+    let cancelled = false
+    setReposLoading(true)
+    setReposError(null)
+
+    fetch("https://api.github.com/user/repos?per_page=100&sort=updated&affiliation=owner,collaborator,organization_member", {
+      headers: { Authorization: `token ${githubUser.token}` },
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (!cancelled && Array.isArray(data)) {
+          setRepos(
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          (data as any[]).map((r) => ({ full_name: String(r.full_name), private: Boolean(r.private) })),
+        )
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setReposError("Failed to load repositories.")
+      })
+      .finally(() => {
+        if (!cancelled) setReposLoading(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [repoType, githubUser?.token])
 
   async function createRepo(workspace: Workspace) {
     if (!githubUser) return
@@ -118,8 +158,20 @@ export function WorkspaceForm({ className, onSubmit, onCancel }: WorkspaceFormPr
 
         const formData = new FormData(event.currentTarget)
         const repoType = String(formData.get("repo-type"))
-        const owner = String(formData.get("repo-owner")).trim()
-        const name = String(formData.get("repo-name")).trim()
+
+        // Owner + name come from the select (existing mode) or text inputs (new mode / fallback)
+        let owner: string
+        let name: string
+        const fullName = formData.get("repo-fullname")
+        if (fullName) {
+          const [repoOwner, ...repoParts] = String(fullName).split("/")
+          owner = repoOwner
+          name = repoParts.join("/")
+        } else {
+          owner = String(formData.get("repo-owner")).trim()
+          name = String(formData.get("repo-name")).trim()
+        }
+
         const workspaceName = String(formData.get("workspace-name")).trim()
         const rawNotesPath = String(formData.get("notes-path")).trim()
         const rawUploadsPath = String(formData.get("uploads-path")).trim()
@@ -175,31 +227,88 @@ export function WorkspaceForm({ className, onSubmit, onCancel }: WorkspaceFormPr
         </div>
       </RadioGroup>
       <div className="flex flex-col gap-4 @lg:gap-3">
-        <div className="flex flex-col gap-4 @lg:flex-row @lg:gap-2.5">
-          <FormControl htmlFor="repo-owner" label="Repository owner">
-            <TextInput
-              id="repo-owner"
-              name="repo-owner"
-              spellCheck={false}
-              autoCapitalize="off"
-              defaultValue={activeWorkspace?.githubRepo.owner ?? githubUser?.login}
-              required
-              invalid={Boolean(error)}
-              onChange={() => setError(null)}
-            />
+        {repoType === "existing" ? (
+          <FormControl htmlFor="repo-fullname" label="Repository">
+            {reposLoading ? (
+              <div className="flex h-8 items-center gap-2 text-sm text-text-secondary coarse:h-10">
+                <LoadingIcon16 />
+                Loading repositories…
+              </div>
+            ) : reposError || repos.length === 0 ? (
+              // Fallback to text inputs if fetch failed or returned nothing
+              <div className="flex flex-col gap-4 @lg:flex-row @lg:gap-2.5">
+                <TextInput
+                  id="repo-owner"
+                  name="repo-owner"
+                  placeholder="owner"
+                  spellCheck={false}
+                  autoCapitalize="off"
+                  defaultValue={activeWorkspace?.githubRepo.owner ?? githubUser?.login}
+                  required
+                  invalid={Boolean(error)}
+                  onChange={() => setError(null)}
+                />
+                <TextInput
+                  id="repo-name"
+                  name="repo-name"
+                  placeholder="repository-name"
+                  spellCheck={false}
+                  autoCapitalize="off"
+                  required
+                  invalid={Boolean(error)}
+                  onChange={() => setError(null)}
+                />
+              </div>
+            ) : (
+              <select
+                id="repo-fullname"
+                name="repo-fullname"
+                required
+                defaultValue=""
+                onChange={() => setError(null)}
+                className={cx(
+                  "h-8 w-full rounded border border-border bg-bg-overlay px-2.5 focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-border-focus coarse:h-10 coarse:px-3",
+                  error && "border-text-danger focus:outline-text-danger",
+                )}
+              >
+                <option value="" disabled>
+                  Select a repository…
+                </option>
+                {repos.map((repo) => (
+                  <option key={repo.full_name} value={repo.full_name}>
+                    {repo.private ? "🔒 " : ""}{repo.full_name}
+                  </option>
+                ))}
+              </select>
+            )}
           </FormControl>
-          <FormControl htmlFor="repo-name" label="Repository name">
-            <TextInput
-              id="repo-name"
-              name="repo-name"
-              spellCheck={false}
-              autoCapitalize="off"
-              required
-              invalid={Boolean(error)}
-              onChange={() => setError(null)}
-            />
-          </FormControl>
-        </div>
+        ) : (
+          <div className="flex flex-col gap-4 @lg:flex-row @lg:gap-2.5">
+            <FormControl htmlFor="repo-owner" label="Repository owner">
+              <TextInput
+                id="repo-owner"
+                name="repo-owner"
+                spellCheck={false}
+                autoCapitalize="off"
+                defaultValue={activeWorkspace?.githubRepo.owner ?? githubUser?.login}
+                required
+                invalid={Boolean(error)}
+                onChange={() => setError(null)}
+              />
+            </FormControl>
+            <FormControl htmlFor="repo-name" label="Repository name">
+              <TextInput
+                id="repo-name"
+                name="repo-name"
+                spellCheck={false}
+                autoCapitalize="off"
+                required
+                invalid={Boolean(error)}
+                onChange={() => setError(null)}
+              />
+            </FormControl>
+          </div>
+        )}
         <FormControl
           htmlFor="notes-path"
           label="Notes folder"

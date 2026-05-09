@@ -12,6 +12,7 @@ import {
   notesAtom,
   pinnedNotesAtom,
 } from "../global-state"
+import { formatRepoSize, useRepoSize } from "../hooks/repo-size"
 import { cx } from "../utils/cx"
 import { isValidDateString, isValidWeekString, toDateString } from "../utils/date"
 import {
@@ -20,6 +21,7 @@ import {
   CalendarDateIcon16,
   CircleQuestionMarkFillIcon16,
   CircleQuestionMarkIcon16,
+  DatabaseIcon16,
   MonitorIcon16,
   MoonIcon16,
   NoteFillIcon16,
@@ -52,6 +54,10 @@ export function NavItems({
   const { online } = useNetworkState()
   const activeWorkspace = useAtomValue(activeWorkspaceAtom)
   const [colorScheme, setColorScheme] = useAtom(colorSchemeAtom)
+  const { sizeKb } = useRepoSize(
+    activeWorkspace?.githubRepo.owner,
+    activeWorkspace?.githubRepo.name,
+  )
   const { pathname } = useLocation()
 
   const today = new Date()
@@ -173,6 +179,12 @@ export function NavItems({
             <div className="nav-item text-text-secondary" data-size={size}>
               <OfflineIcon16 />
               Offline
+            </div>
+          ) : null}
+          {sizeKb !== null ? (
+            <div className="nav-item text-text-secondary" data-size={size}>
+              <DatabaseIcon16 />
+              {formatRepoSize(sizeKb)}
             </div>
           ) : null}
           <button

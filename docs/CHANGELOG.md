@@ -8,6 +8,10 @@
 
 ### Improved
 
+- **Repo picker in workspace form** — when adding an existing workspace, the repository field is now a dropdown populated from `GET /user/repos`, listing all accessible repos (sorted by recently updated, 🔒 prefix for private). No more typing owner and name by hand.
+- **Repo size in settings** — each workspace row in Settings now shows the current repository size (e.g. `305 kB`, `1.2 MB`) fetched from the GitHub API.
+- **Repo size in sidebar** — the repository size is displayed in the bottom of the sidebar with a database icon, above the appearance toggle, so it's always visible at a glance.
+
 ### Package updates
 
 All dependencies updated to latest compatible versions across 7 phases.

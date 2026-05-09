@@ -6,10 +6,11 @@ import {
   isCloningRepoAtom,
   workspacesAtom,
 } from "../global-state"
+import { formatRepoSize, useRepoSize } from "../hooks/repo-size"
 import { Workspace } from "../schema"
 import { Button } from "./button"
 import { Dialog } from "./dialog"
-import { CheckFillIcon16, LoadingIcon16 } from "./icons"
+import { LoadingIcon16 } from "./icons"
 import { WorkspaceForm } from "./repo-form"
 
 export function WorkspaceList() {
@@ -60,6 +61,10 @@ function WorkspaceRow({
 }) {
   const send = useSetAtom(globalStateMachineAtom)
   const [confirmDeleteOpen, setConfirmDeleteOpen] = React.useState(false)
+  const { sizeKb, isLoading: sizeLoading } = useRepoSize(
+    workspace.githubRepo.owner,
+    workspace.githubRepo.name,
+  )
 
   return (
     <div className="flex items-center justify-between gap-4 rounded-lg border border-border-secondary px-4 py-3">
@@ -81,6 +86,13 @@ function WorkspaceRow({
           >
             {workspace.githubRepo.owner}/{workspace.githubRepo.name}
           </a>
+          {sizeKb !== null ? (
+            <span className="text-text-tertiary">{formatRepoSize(sizeKb)}</span>
+          ) : sizeLoading ? (
+            <span className="text-text-tertiary">
+              <LoadingIcon16 className="inline" />
+            </span>
+          ) : null}
           {workspace.notesPath && <span className="text-text-tertiary">{workspace.notesPath}</span>}
           {workspace.uploadsPath && (
             <span className="text-text-tertiary">uploads: {workspace.uploadsPath}</span>
