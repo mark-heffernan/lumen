@@ -13,9 +13,9 @@ function Icon({ size, className, ...props }: IconProps & { size: number }) {
       className={cx(
         "shrink-0 overflow-visible",
         // data-epaper=show
-        "[&_[data-epaper=show]]:hidden epaper:[&_[data-epaper=show]]:inline",
+        "**:data-[epaper=show]:hidden epaper:**:data-[epaper=show]:inline",
         // data-epaper=hide
-        "epaper:[&_[data-epaper=hide]]:hidden",
+        "epaper:**:data-[epaper=hide]:hidden",
         className,
       )}
       {...props}
@@ -1183,3 +1183,10 @@ export function MonitorIcon16(props: IconProps) {
   )
 }
 
+export function DatabaseIcon16(props: IconProps) {
+  return (
+    <Icon size={16} {...props}>
+      <path d="M8 1C5.23858 1 3 2.11929 3 3.5V12.5C3 13.8807 5.23858 15 8 15C10.7614 15 13 13.8807 13 12.5V3.5C13 2.11929 10.7614 1 8 1ZM11.5 3.5C11.5 4.05228 9.933 4.5 8 4.5C6.067 4.5 4.5 4.05228 4.5 3.5C4.5 2.94772 6.067 2.5 8 2.5C9.933 2.5 11.5 2.94772 11.5 3.5ZM4.5 5.91699C5.22287 6.28588 6.54753 6.5 8 6.5C9.45247 6.5 10.7771 6.28588 11.5 5.91699V7.5C11.5 8.05228 9.933 8.5 8 8.5C6.067 8.5 4.5 8.05228 4.5 7.5V5.91699ZM4.5 9.41699C5.22287 9.78588 6.54753 10 8 10C9.45247 10 10.7771 9.78588 11.5 9.41699V11C11.5 11.5523 9.933 12 8 12C6.067 12 4.5 11.5523 4.5 11V9.41699ZM4.5 12.917C5.22287 13.2859 6.54753 13.5 8 13.5C9.45247 13.5 10.7771 13.2859 11.5 12.917V12.5C11.5 13.0523 9.933 13.5 8 13.5C6.067 13.5 4.5 13.0523 4.5 12.5V12.917Z" />
+    </Icon>
+  )
+}
