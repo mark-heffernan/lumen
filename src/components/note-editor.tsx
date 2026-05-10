@@ -9,6 +9,8 @@ import { yamlFrontmatter } from "@codemirror/lang-yaml"
 import { HighlightStyle, syntaxHighlighting } from "@codemirror/language"
 import { EditorSelection, Prec } from "@codemirror/state"
 import { EditorView, keymap, ViewUpdate } from "@codemirror/view"
+import { aiEnhancer } from "@yuri2/codemirror-ai-enhancer"
+import "@yuri2/codemirror-ai-enhancer/styles.css"
 import { createTheme } from "@uiw/codemirror-themes"
 import CodeMirror, { ReactCodeMirrorRef } from "@uiw/react-codemirror"
 import { parseDate } from "chrono-node"
@@ -35,6 +37,7 @@ import { cx } from "../utils/cx"
 import { formatDate, formatDateDistance } from "../utils/date"
 import { generateNoteId } from "../utils/note-id"
 import { useInsertTemplate } from "./insert-template"
+import { streamAiEnhance } from "../utils/ai-enhance"
 
 type NoteEditorProps = {
   className?: string
@@ -182,6 +185,24 @@ export const NoteEditor = React.forwardRef<ReactCodeMirrorRef, NoteEditorProps>(
           }),
         ),
         syntaxHighlighting(syntaxHighlighter),
+        ...aiEnhancer({
+          insert: ({ prefix, suffix, command, onTextChange }) => {
+            streamAiEnhance({
+              prefix,
+              suffix,
+              selection: "",
+              command,
+              mode: "insert",
+              onTextChange,
+            })
+          },
+          rewrite: ({ prefix, suffix, selection, command, onTextChange }) => {
+            streamAiEnhance({ prefix, suffix, selection, command, mode: "rewrite", onTextChange })
+          },
+          assist: ({ prefix, suffix, selection, command, onTextChange }) => {
+            streamAiEnhance({ prefix, suffix, selection, command, mode: "assist", onTextChange })
+          },
+        }),
       ]
 
       if (vimMode) {
@@ -205,7 +226,7 @@ export const NoteEditor = React.forwardRef<ReactCodeMirrorRef, NoteEditorProps>(
       <CodeMirror
         ref={ref}
         className={cx(
-          "[&_.cm-content]:min-h-[var(--min-height)]",
+          "[&_.cm-content]:min-h-(--min-height)",
           className,
           isCommandKeyPressed && "cm-wikilinks-enabled",
         )}

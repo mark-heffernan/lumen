@@ -31,11 +31,13 @@ import {
   PinIcon16,
   PrinterIcon16,
   ShareIcon16,
+  SparkleIcon16,
   TrashIcon16,
   UndoIcon16,
   WidthFixedIcon16,
   WidthFullIcon16,
 } from "../components/icons"
+import { MobileAiSheet } from "../components/mobile-ai-sheet"
 import { InsertTemplateDialog, removeFrontmatterComments } from "../components/insert-template"
 import { LinkHighlightProvider } from "../components/link-highlight-provider"
 import { Markdown } from "../components/markdown"
@@ -148,6 +150,7 @@ function NotePage() {
 
   // Editor state
   const editorRef = React.useRef<ReactCodeMirrorRef>(null)
+  const [isAiSheetOpen, setIsAiSheetOpen] = React.useState(false)
   const { editorValue, setEditorValue, isDraft, discardChanges } = useEditorValue({
     noteId: noteId ?? "",
     note,
@@ -761,6 +764,15 @@ function NotePage() {
               Save
             </Button>
           ) : null}
+          {mode === "write" ? (
+            <button
+              aria-label="AI assistant"
+              onClick={() => setIsAiSheetOpen(true)}
+              className="grid h-8 coarse:h-12 w-8 coarse:w-12 place-items-center rounded-full border border-border bg-bg-overlay text-text-secondary hover:bg-bg-secondary active:bg-bg-secondary-active transition-colors"
+            >
+              <SparkleIcon16 />
+            </button>
+          ) : null}
           <RadixSwitch.Root
             checked={mode === "write"}
             onCheckedChange={(checked) => {
@@ -781,6 +793,11 @@ function NotePage() {
         </div>
       }
     >
+      <MobileAiSheet
+        isOpen={isAiSheetOpen}
+        onClose={() => setIsAiSheetOpen(false)}
+        editorView={editorRef.current?.view ?? null}
+      />
       <InsertTemplateDialog />
       {/* eslint-disable-next-line jsx-a11y/no-static-element-interactions */}
       <div

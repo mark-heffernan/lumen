@@ -9,6 +9,7 @@ import {
   colorSchemeAtom,
   globalStateMachineAtom,
   isHelpPanelOpenAtom,
+  isSignedOutAtom,
   notesAtom,
   pinnedNotesAtom,
 } from "../global-state"
@@ -58,6 +59,7 @@ export function NavItems({
     activeWorkspace?.githubRepo.owner,
     activeWorkspace?.githubRepo.name,
   )
+  const isSignedOut = useAtomValue(isSignedOutAtom)
   const { pathname } = useLocation()
 
   const today = new Date()
@@ -166,61 +168,81 @@ export function NavItems({
           ) : null}
         </div>
         <div className="flex flex-col gap-1">
-          {needRefresh ? (
-            <button className="nav-item" data-size={size} onClick={() => updateServiceWorker(true)}>
-              <div className="grid size-4 place-items-center *:row-span-full *:col-span-full">
-                <div className="size-3 rounded-full bg-border-focus opacity-50 animate-ping" />
-                <div className="size-2 rounded-full bg-border-focus" />
-              </div>
-              Update Lumen
-            </button>
-          ) : null}
-          {!online ? (
-            <div className="nav-item text-text-secondary" data-size={size}>
-              <OfflineIcon16 />
-              Offline
-            </div>
-          ) : null}
-          {sizeKb !== null ? (
-            <div className="nav-item text-text-secondary" data-size={size}>
-              <DatabaseIcon16 />
-              {formatRepoSize(sizeKb)}
-            </div>
-          ) : null}
-          <button
-            className="nav-item text-text-secondary"
-            data-size={size}
-            title={
-              colorScheme === "system"
-                ? "Appearance: System"
-                : colorScheme === "light"
-                  ? "Appearance: Light"
-                  : "Appearance: Dark"
-            }
-            onClick={() =>
-              setColorScheme(
-                colorScheme === "system" ? "light" : colorScheme === "light" ? "dark" : "system",
-              )
-            }
-          >
-            {colorScheme === "dark" ? (
-              <MoonIcon16 />
-            ) : colorScheme === "light" ? (
-              <SunIcon16 />
-            ) : (
-              <MonitorIcon16 />
-            )}
-            {colorScheme === "dark" ? "Dark" : colorScheme === "light" ? "Light" : "System"}
-          </button>
-          {syncText ? (
-            <button
-              className="nav-item text-text-secondary"
-              data-size={size}
-              onClick={() => send({ type: "SYNC" })}
-            >
-              <SyncStatusIcon />
-              {syncText}
-            </button>
+          {!isSignedOut ? (
+            <>
+              {needRefresh ? (
+                <button
+                  className="nav-item"
+                  data-size={size}
+                  onClick={() => updateServiceWorker(true)}
+                >
+                  <div className="grid size-4 place-items-center *:row-span-full *:col-span-full">
+                    <div className="size-3 rounded-full bg-border-focus opacity-50 animate-ping" />
+                    <div className="size-2 rounded-full bg-border-focus" />
+                  </div>
+                  Update Lumen
+                </button>
+              ) : null}
+              {!online ? (
+                <div className="nav-item text-text-secondary" data-size={size}>
+                  <OfflineIcon16 />
+                  Offline
+                </div>
+              ) : null}
+              {sizeKb !== null ? (
+                <div className="nav-item text-text-secondary" data-size={size}>
+                  <DatabaseIcon16 />
+                  {formatRepoSize(sizeKb)}
+                </div>
+              ) : null}
+              <button
+                className="nav-item text-text-secondary"
+                data-size={size}
+                title={
+                  colorScheme === "system"
+                    ? "Appearance: System"
+                    : colorScheme === "light"
+                      ? "Appearance: Light"
+                      : "Appearance: Dark"
+                }
+                onClick={() =>
+                  setColorScheme(
+                    colorScheme === "system"
+                      ? "light"
+                      : colorScheme === "light"
+                        ? "dark"
+                        : "system",
+                  )
+                }
+              >
+                {colorScheme === "dark" ? (
+                  <MoonIcon16 />
+                ) : colorScheme === "light" ? (
+                  <SunIcon16 />
+                ) : (
+                  <MonitorIcon16 />
+                )}
+                {colorScheme === "dark" ? "Dark" : colorScheme === "light" ? "Light" : "System"}
+              </button>
+              {syncText ? (
+                <button
+                  className="nav-item text-text-secondary"
+                  data-size={size}
+                  onClick={() => send({ type: "SYNC" })}
+                >
+                  <SyncStatusIcon />
+                  {syncText}
+                </button>
+              ) : null}
+              <NavLink
+                to="/docs"
+                icon={<BookIcon16 />}
+                className="text-text-secondary"
+                onNavigate={onNavigate}
+              >
+                Docs
+              </NavLink>
+            </>
           ) : null}
           <NavLink
             to="/settings"
@@ -231,14 +253,6 @@ export function NavItems({
             onNavigate={onNavigate}
           >
             Settings
-          </NavLink>
-          <NavLink
-            to="/docs"
-            icon={<BookIcon16 />}
-            className="text-text-secondary"
-            onNavigate={onNavigate}
-          >
-            Docs
           </NavLink>
           <HelpNavItem size={size} />
         </div>

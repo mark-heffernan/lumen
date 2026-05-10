@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev",
-    "dev:vercel": "vercel dev --listen 8888 --yes",
+    "dev:vercel": "node scripts/dev-vercel.mjs",
     "dev:storybook": "storybook dev -p 6006",
     "build": "tsc && vite build",
     "build:storybook": "storybook build",
@@ -52,6 +52,7 @@
     "@supabase/supabase-js": "^2.89.0",
     "@uiw/codemirror-themes": "^4.25.9",
     "@uiw/react-codemirror": "^4.25.9",
+    "@yuri2/codemirror-ai-enhancer": "^1.1.0",
     "ai": "^6.0.175",
     "buffer": "^6.0.3",
     "change-case": "^5.4.4",

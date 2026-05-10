@@ -1183,6 +1183,14 @@ export function MonitorIcon16(props: IconProps) {
   )
 }
 
+export function SparkleIcon16(props: IconProps) {
+  return (
+    <Icon size={16} {...props}>
+      <path d="M8 1C8 1 8.8 4.5 10.5 6.5C12.2 8.5 15 9 15 9C15 9 12.2 9.5 10.5 11.5C8.8 13.5 8 17 8 17C8 17 7.2 13.5 5.5 11.5C3.8 9.5 1 9 1 9C1 9 3.8 8.5 5.5 6.5C7.2 4.5 8 1 8 1Z M13 1C13 1 13.4 2.6 14.2 3.5C15 4.4 16.5 4.8 16.5 4.8C16.5 4.8 15 5.2 14.2 6.1C13.4 7 13 8.5 13 8.5C13 8.5 12.6 7 11.8 6.1C11 5.2 9.5 4.8 9.5 4.8C9.5 4.8 11 4.4 11.8 3.5C12.6 2.6 13 1 13 1Z" />
+    </Icon>
+  )
+}
+
 export function DatabaseIcon16(props: IconProps) {
   return (
     <Icon size={16} {...props}>

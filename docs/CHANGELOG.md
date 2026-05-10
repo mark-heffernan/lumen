@@ -2,6 +2,22 @@
 
 ## 2026-W19
 
+### New
+
+- **Mobile AI assistant** — a sparkle (✨) button now appears in the floating action bar when editing a note on mobile or tablet. Tapping it opens a bottom sheet with three modes:
+  - **Continue writing** — AI continues from the cursor position with no prompt needed.
+  - **Compose** — give an instruction (e.g. "Write a paragraph about the coastal scenery") and the result is inserted at the cursor.
+  - **Ask** — ask a question about your topic; the answer is shown with Copy and Insert options.
+  - The sheet captures the cursor position at open time, so scrolling or tapping elsewhere doesn't shift where content lands.
+
+- **AI writing assistant in the note editor** from https://codemirror-ai-enhancer.vercel.app
+  - Three AI-powered commands are now available inside any note (powered by OpenAI via a server-side Vercel Function, key never exposed to the browser):
+    - **Cmd+J** — continues writing from the cursor position, matching your tone and context. Ghost text streams in; press Tab to accept.
+    - **Cmd+K** — compose panel. With text selected: rewrites it per your instruction. With nothing selected: generates new content from your prompt. Tab to accept.
+    - **Cmd+L** — Q&A reference panel. Ask a question (e.g. "Where is Rogoznica?") and the answer appears inline. Click the answer to copy it to the clipboard, then paste wherever you need it.
+  - **`api/ai-enhance`** — new server-side Vercel Function that handles all three AI modes, builds context-aware prompts from the surrounding document, and streams the OpenAI response back to the editor.
+  - **`scripts/dev-vercel.mjs`** — wrapper script for `npm run dev:vercel` that pre-loads sensitive API keys (e.g. `OPENAI_API_KEY`, `TMDB_API_KEY`) from a gitignored `.env.keys` file before starting the Vercel dev server. Fixes a Vercel limitation where Sensitive environment variables cannot be set for the Development environment and are therefore absent from `vercel env pull`.
+
 ### Removed
 
 - **`api/log-user`** — removed the upstream developer's analytics endpoint and its corresponding `logUser` state machine action. The function logged each app open to an external Supabase database; without `SUPABASE_URL` and `SUPABASE_SERVICE_KEY` env vars it threw a 500 error on every page load, filling Vercel logs with noise. Not needed for a self-hosted deployment.
@@ -11,6 +27,7 @@
 - **Repo picker in workspace form** — when adding an existing workspace, the repository field is now a dropdown populated from `GET /user/repos`, listing all accessible repos (sorted by recently updated, 🔒 prefix for private). No more typing owner and name by hand.
 - **Repo size in settings** — each workspace row in Settings now shows the current repository size (e.g. `305 kB`, `1.2 MB`) fetched from the GitHub API.
 - **Repo size in sidebar** — the repository size is displayed in the bottom of the sidebar with a database icon, above the appearance toggle, so it's always visible at a glance.
+- **Sidebar auth-gating** — on initial load (before signing in), the sidebar bottom section is simplified to just Settings and Help. The Update, Offline indicator, repo size, appearance toggle, docs and sync status items are hidden until the user is signed in, keeping the onboarding experience clean.
 
 ### Package updates
 
