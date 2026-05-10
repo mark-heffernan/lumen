@@ -1,6 +1,7 @@
 import { EditorView } from "@codemirror/view"
 import copy from "copy-to-clipboard"
 import React from "react"
+import ReactDOM from "react-dom"
 import { streamAiEnhance } from "../utils/ai-enhance"
 import { cx } from "../utils/cx"
 import { Button } from "./button"
@@ -94,7 +95,7 @@ export function MobileAiSheet({ isOpen, onClose, editorView }: MobileAiSheetProp
 
   if (!isOpen) return null
 
-  return (
+  return ReactDOM.createPortal(
     <>
       {/* Backdrop */}
       <div
@@ -104,7 +105,10 @@ export function MobileAiSheet({ isOpen, onClose, editorView }: MobileAiSheetProp
       />
 
       {/* Sheet */}
-      <div className="fixed inset-x-0 bottom-0 z-50 flex flex-col rounded-t-2xl bg-bg-overlay shadow-xl max-h-[75vh]">
+      <div
+        className="fixed inset-x-0 bottom-0 z-50 flex flex-col rounded-t-2xl bg-bg-overlay shadow-xl max-h-[75vh]"
+        style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+      >
         {/* Drag handle */}
         <div className="flex justify-center pt-3 pb-1 shrink-0">
           <div className="h-1 w-10 rounded-full bg-border" />
@@ -229,7 +233,8 @@ export function MobileAiSheet({ isOpen, onClose, editorView }: MobileAiSheetProp
           )}
         </div>
       </div>
-    </>
+    </>,
+    document.body,
   )
 }
 
