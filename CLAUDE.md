@@ -110,3 +110,7 @@ Lumen is a simple note-taking web application built with React and TypeScript. I
 - Bundle analysis available via `npm run build` (generates dist/stats.html)
 - PWA configuration for offline functionality
 - Lazy loading and code splitting implemented
+
+## Documentation
+
+- Always update the documentation 'docs/CHANGELOG.md' when making significant changes
