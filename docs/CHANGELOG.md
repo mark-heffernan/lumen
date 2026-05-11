@@ -1,5 +1,12 @@
 # Changelog
 
+## 2026-W20
+
+### Improved
+
+- Update OpenAI model to use 'gpt-5.4-nano'
+- Update OpenAI API to use `max_completion_tokens` instead of `max_tokens`
+
 ## 2026-W19
 
 ### New

@@ -92,11 +92,11 @@ export async function POST(request: Request): Promise<Response> {
   const openai = new OpenAI({ apiKey })
 
   const stream = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
+    model: "gpt-5.4-nano", //"gpt-4o-mini"
     messages: buildMessages(body),
     stream: true,
     temperature: mode === "assist" ? 0.5 : 0.7,
-    max_tokens: mode === "insert" ? 150 : 1000,
+    max_completion_tokens: mode === "insert" ? 150 : 1000,
   })
 
   // Stream raw text chunks so the client can pipe them directly into onTextChange
