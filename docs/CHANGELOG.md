@@ -1,6 +1,15 @@
 # Changelog
 
-## 2026-W20
+## 2026-W20 
+
+### New
+
+- **RSS Feed Reader** — Lumen can now subscribe to and read RSS/Atom feeds. Access via the new **Feeds** entry in the sidebar (between Tags and the bottom section).
+  - **Feed list** (`/feeds`) — subscribe by pasting any RSS/Atom URL; the feed title is auto-fetched on add. Feeds are stored in the browser (localStorage) and persist across sessions.
+  - **Article view** (`/feeds/{id}`) — lists up to 50 articles per feed with title, excerpt, author, and publication date. Each article links out to the original source.
+  - **Save as note** — hover any article and click the note icon to save it as a Lumen note pre-filled with the title, source link, date, and excerpt. The note opens tagged with `rss` and ready for your own thoughts.
+  - **`api/rss.ts`** — new Vercel Function that fetches and parses feeds server-side using `rss-parser`, avoiding browser CORS restrictions entirely. Responses are cached for 5 minutes.
+  - Feed subscriptions are also manageable from **Settings → Feeds**.
 
 ### New
 

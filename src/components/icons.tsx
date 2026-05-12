@@ -699,6 +699,14 @@ export function MessageIcon16(props: IconProps) {
   )
 }
 
+export function RssFeedIcon16(props: IconProps) {
+  return (
+    <Icon size={16} {...props}>
+      <path d="M2 2a1 1 0 0 0 0 2 10 10 0 0 1 10 10 1 1 0 0 0 2 0A12 12 0 0 0 2 2Zm0 4a1 1 0 0 0 0 2 6 6 0 0 1 6 6 1 1 0 0 0 2 0 8 8 0 0 0-8-8Zm0 4a1 1 0 0 0 0 2 2 2 0 0 1 2 2 1 1 0 0 0 2 0 4 4 0 0 0-4-4Zm0 5a1.5 1.5 0 1 0 0-3 1.5 1.5 0 0 0 0 3Z" />
+    </Icon>
+  )
+}
+
 export function GlobeIcon16(props: IconProps) {
   return (
     <Icon size={16} {...props}>

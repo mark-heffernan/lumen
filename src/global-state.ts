@@ -1096,3 +1096,16 @@ export const voiceAssistantEnabledAtom = atomWithStorage<boolean>("voice_assista
 
 // Export uuidv4 for use in WorkspaceForm
 export { uuidv4 }
+
+// ---------------------------------------------------------------------------
+// RSS Feeds
+// ---------------------------------------------------------------------------
+
+export type RssFeed = {
+  id: string
+  url: string
+  title: string
+  addedAt: string // ISO date string
+}
+
+export const feedsAtom = atomWithStorage<RssFeed[]>("rss_feeds", [])

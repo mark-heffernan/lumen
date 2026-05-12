@@ -17,9 +17,11 @@ import { Route as AppRootSettingsRouteImport } from './routes/_appRoot.settings'
 import { Route as AppRootFileRouteImport } from './routes/_appRoot.file'
 import { Route as AppRootTagsIndexRouteImport } from './routes/_appRoot.tags.index'
 import { Route as AppRootNotesIndexRouteImport } from './routes/_appRoot.notes.index'
+import { Route as AppRootFeedsIndexRouteImport } from './routes/_appRoot.feeds.index'
 import { Route as AppRootDocsIndexRouteImport } from './routes/_appRoot.docs.index'
 import { Route as AppRootTagsSplatRouteImport } from './routes/_appRoot.tags_.$'
 import { Route as AppRootNotesSplatRouteImport } from './routes/_appRoot.notes_.$'
+import { Route as AppRootFeedsSplatRouteImport } from './routes/_appRoot.feeds_.$'
 import { Route as AppRootDocsDocRouteImport } from './routes/_appRoot.docs_.$doc'
 
 const AiRoute = AiRouteImport.update({
@@ -61,6 +63,11 @@ const AppRootNotesIndexRoute = AppRootNotesIndexRouteImport.update({
   path: '/notes/',
   getParentRoute: () => AppRootRoute,
 } as any)
+const AppRootFeedsIndexRoute = AppRootFeedsIndexRouteImport.update({
+  id: '/feeds/',
+  path: '/feeds/',
+  getParentRoute: () => AppRootRoute,
+} as any)
 const AppRootDocsIndexRoute = AppRootDocsIndexRouteImport.update({
   id: '/docs/',
   path: '/docs/',
@@ -76,6 +83,11 @@ const AppRootNotesSplatRoute = AppRootNotesSplatRouteImport.update({
   path: '/notes/$',
   getParentRoute: () => AppRootRoute,
 } as any)
+const AppRootFeedsSplatRoute = AppRootFeedsSplatRouteImport.update({
+  id: '/feeds_/$',
+  path: '/feeds/$',
+  getParentRoute: () => AppRootRoute,
+} as any)
 const AppRootDocsDocRoute = AppRootDocsDocRouteImport.update({
   id: '/docs_/$doc',
   path: '/docs/$doc',
@@ -89,9 +101,11 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AppRootSettingsRoute
   '/share/$gistId': typeof ShareGistIdRoute
   '/docs/$doc': typeof AppRootDocsDocRoute
+  '/feeds/$': typeof AppRootFeedsSplatRoute
   '/notes/$': typeof AppRootNotesSplatRoute
   '/tags/$': typeof AppRootTagsSplatRoute
   '/docs/': typeof AppRootDocsIndexRoute
+  '/feeds/': typeof AppRootFeedsIndexRoute
   '/notes/': typeof AppRootNotesIndexRoute
   '/tags/': typeof AppRootTagsIndexRoute
 }
@@ -102,9 +116,11 @@ export interface FileRoutesByTo {
   '/share/$gistId': typeof ShareGistIdRoute
   '/': typeof AppRootIndexRoute
   '/docs/$doc': typeof AppRootDocsDocRoute
+  '/feeds/$': typeof AppRootFeedsSplatRoute
   '/notes/$': typeof AppRootNotesSplatRoute
   '/tags/$': typeof AppRootTagsSplatRoute
   '/docs': typeof AppRootDocsIndexRoute
+  '/feeds': typeof AppRootFeedsIndexRoute
   '/notes': typeof AppRootNotesIndexRoute
   '/tags': typeof AppRootTagsIndexRoute
 }
@@ -117,9 +133,11 @@ export interface FileRoutesById {
   '/share/$gistId': typeof ShareGistIdRoute
   '/_appRoot/': typeof AppRootIndexRoute
   '/_appRoot/docs_/$doc': typeof AppRootDocsDocRoute
+  '/_appRoot/feeds_/$': typeof AppRootFeedsSplatRoute
   '/_appRoot/notes_/$': typeof AppRootNotesSplatRoute
   '/_appRoot/tags_/$': typeof AppRootTagsSplatRoute
   '/_appRoot/docs/': typeof AppRootDocsIndexRoute
+  '/_appRoot/feeds/': typeof AppRootFeedsIndexRoute
   '/_appRoot/notes/': typeof AppRootNotesIndexRoute
   '/_appRoot/tags/': typeof AppRootTagsIndexRoute
 }
@@ -132,9 +150,11 @@ export interface FileRouteTypes {
     | '/settings'
     | '/share/$gistId'
     | '/docs/$doc'
+    | '/feeds/$'
     | '/notes/$'
     | '/tags/$'
     | '/docs/'
+    | '/feeds/'
     | '/notes/'
     | '/tags/'
   fileRoutesByTo: FileRoutesByTo
@@ -145,9 +165,11 @@ export interface FileRouteTypes {
     | '/share/$gistId'
     | '/'
     | '/docs/$doc'
+    | '/feeds/$'
     | '/notes/$'
     | '/tags/$'
     | '/docs'
+    | '/feeds'
     | '/notes'
     | '/tags'
   id:
@@ -159,9 +181,11 @@ export interface FileRouteTypes {
     | '/share/$gistId'
     | '/_appRoot/'
     | '/_appRoot/docs_/$doc'
+    | '/_appRoot/feeds_/$'
     | '/_appRoot/notes_/$'
     | '/_appRoot/tags_/$'
     | '/_appRoot/docs/'
+    | '/_appRoot/feeds/'
     | '/_appRoot/notes/'
     | '/_appRoot/tags/'
   fileRoutesById: FileRoutesById
@@ -230,6 +254,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRootNotesIndexRouteImport
       parentRoute: typeof AppRootRoute
     }
+    '/_appRoot/feeds/': {
+      id: '/_appRoot/feeds/'
+      path: '/feeds'
+      fullPath: '/feeds/'
+      preLoaderRoute: typeof AppRootFeedsIndexRouteImport
+      parentRoute: typeof AppRootRoute
+    }
     '/_appRoot/docs/': {
       id: '/_appRoot/docs/'
       path: '/docs'
@@ -251,6 +282,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRootNotesSplatRouteImport
       parentRoute: typeof AppRootRoute
     }
+    '/_appRoot/feeds_/$': {
+      id: '/_appRoot/feeds_/$'
+      path: '/feeds/$'
+      fullPath: '/feeds/$'
+      preLoaderRoute: typeof AppRootFeedsSplatRouteImport
+      parentRoute: typeof AppRootRoute
+    }
     '/_appRoot/docs_/$doc': {
       id: '/_appRoot/docs_/$doc'
       path: '/docs/$doc'
@@ -266,9 +304,11 @@ interface AppRootRouteChildren {
   AppRootSettingsRoute: typeof AppRootSettingsRoute
   AppRootIndexRoute: typeof AppRootIndexRoute
   AppRootDocsDocRoute: typeof AppRootDocsDocRoute
+  AppRootFeedsSplatRoute: typeof AppRootFeedsSplatRoute
   AppRootNotesSplatRoute: typeof AppRootNotesSplatRoute
   AppRootTagsSplatRoute: typeof AppRootTagsSplatRoute
   AppRootDocsIndexRoute: typeof AppRootDocsIndexRoute
+  AppRootFeedsIndexRoute: typeof AppRootFeedsIndexRoute
   AppRootNotesIndexRoute: typeof AppRootNotesIndexRoute
   AppRootTagsIndexRoute: typeof AppRootTagsIndexRoute
 }
@@ -278,9 +318,11 @@ const AppRootRouteChildren: AppRootRouteChildren = {
   AppRootSettingsRoute: AppRootSettingsRoute,
   AppRootIndexRoute: AppRootIndexRoute,
   AppRootDocsDocRoute: AppRootDocsDocRoute,
+  AppRootFeedsSplatRoute: AppRootFeedsSplatRoute,
   AppRootNotesSplatRoute: AppRootNotesSplatRoute,
   AppRootTagsSplatRoute: AppRootTagsSplatRoute,
   AppRootDocsIndexRoute: AppRootDocsIndexRoute,
+  AppRootFeedsIndexRoute: AppRootFeedsIndexRoute,
   AppRootNotesIndexRoute: AppRootNotesIndexRoute,
   AppRootTagsIndexRoute: AppRootTagsIndexRoute,
 }

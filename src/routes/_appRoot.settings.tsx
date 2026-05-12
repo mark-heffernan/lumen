@@ -1,10 +1,13 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router"
 import { useAtom, useAtomValue } from "jotai"
+import React from "react"
 import { useNetworkState } from "react-use"
 import { Button } from "../components/button"
+import { FeedForm } from "../components/feed-form"
 import { useSignOut } from "../components/github-auth"
 import { GitHubAvatar } from "../components/github-avatar"
-import { SettingsIcon16 } from "../components/icons"
+import { IconButton } from "../components/icon-button"
+import { PlusIcon16, RssFeedIcon16, SettingsIcon16, TrashIcon16 } from "../components/icons"
 import { OpenAIKeyInput } from "../components/openai-key-input"
 import { PageLayout } from "../components/page-layout"
 import { Signature } from "../components/signature"
@@ -12,11 +15,13 @@ import { Switch } from "../components/switch"
 import { WorkspaceList } from "../components/workspace-list"
 import {
   epaperAtom,
+  feedsAtom,
   githubUserAtom,
   hasOpenAIKeyAtom,
   vimModeAtom,
   voiceAssistantEnabledAtom,
 } from "../global-state"
+import { clearFeedCache } from "../hooks/feeds"
 import { cx } from "../utils/cx"
 
 export const Route = createFileRoute("/_appRoot/settings")({
@@ -35,6 +40,7 @@ function RouteComponent() {
           <AppearanceSection />
           <EditorSection />
           <AISection />
+          <FeedsSection />
           <div className="p-5 text-text-tertiary self-center flex flex-col gap-3 items-center">
             <span className="text-sm">
               Made by{" "}
@@ -187,6 +193,60 @@ function AISection() {
             </div>
           </div>
         </div>
+      </div>
+    </SettingsSection>
+  )
+}
+
+function FeedsSection() {
+  const [feeds, setFeeds] = useAtom(feedsAtom)
+  const [isAdding, setIsAdding] = React.useState(false)
+  const navigate = useNavigate()
+
+  function removeFeed(id: string) {
+    const feed = feeds.find((f) => f.id === id)
+    if (feed) clearFeedCache(feed.url)
+    setFeeds((prev) => prev.filter((f) => f.id !== id))
+  }
+
+  return (
+    <SettingsSection title="Feeds">
+      <div className="flex flex-col gap-4">
+        {feeds.length > 0 ? (
+          <ul className="flex flex-col gap-2">
+            {feeds.map((feed) => (
+              <li key={feed.id} className="flex items-center gap-2 group">
+                <RssFeedIcon16 className="shrink-0 text-text-secondary" />
+                <button
+                  className="flex-1 min-w-0 text-left truncate hover:underline"
+                  onClick={() => navigate({ to: "/feeds/$", params: { _splat: feed.id } })}
+                >
+                  {feed.title}
+                </button>
+                <IconButton
+                  aria-label={`Remove ${feed.title}`}
+                  size="small"
+                  className="shrink-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                  onClick={() => removeFeed(feed.id)}
+                  tooltipSide="left"
+                >
+                  <TrashIcon16 />
+                </IconButton>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-sm text-text-secondary">No feeds subscribed yet.</p>
+        )}
+
+        {isAdding ? (
+          <FeedForm onSuccess={() => setIsAdding(false)} onCancel={() => setIsAdding(false)} />
+        ) : (
+          <Button onClick={() => setIsAdding(true)} className="self-start">
+            <PlusIcon16 />
+            Add feed
+          </Button>
+        )}
       </div>
     </SettingsSection>
   )

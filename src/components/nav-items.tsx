@@ -28,6 +28,7 @@ import {
   NoteFillIcon16,
   NoteIcon16,
   OfflineIcon16,
+  RssFeedIcon16,
   SettingsFillIcon16,
   SettingsIcon16,
   SunIcon16,
@@ -134,6 +135,15 @@ export function NavItems({
                 onNavigate={onNavigate}
               >
                 Tags
+              </NavLink>
+            </li>
+            <li>
+              <NavLink
+                to="/feeds"
+                icon={<RssFeedIcon16 />}
+                onNavigate={onNavigate}
+              >
+                Feeds
               </NavLink>
             </li>
           </ul>
