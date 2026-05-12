@@ -1,4 +1,5 @@
 import { HeadContent, Link, Outlet, createRootRoute } from "@tanstack/react-router"
+import { Analytics } from "@vercel/analytics/react"
 import { useThemeColor } from "../hooks/theme-color"
 import { createPortal } from "react-dom"
 
@@ -28,6 +29,7 @@ function RootComponent() {
     <>
       {createPortal(<HeadContent />, document.querySelector("head")!)}
       <Outlet />
+      <Analytics />
     </>
   )
 }

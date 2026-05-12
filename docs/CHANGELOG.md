@@ -2,10 +2,17 @@
 
 ## 2026-W20
 
+### New
+
+- **Vercel Web Analytics** — added `@vercel/analytics` and the `<Analytics />` component to the app root (`src/routes/__root.tsx`). Page view and navigation events are now tracked automatically in the Vercel dashboard with no client-side configuration required.
+
 ### Improved
 
-- Update OpenAI model to use 'gpt-5.4-nano'
-- Update OpenAI API to use `max_completion_tokens` instead of `max_tokens`
+- **OpenAI model upgraded to `gpt-5.4-nano`** — updated `api/ai-enhance.ts` to use the latest model. Also switched the token limit parameter from the legacy `max_tokens` to `max_completion_tokens`, which is required by the new model.
+
+### Package updates
+
+- Updated `@typescript-eslint/eslint-plugin` and `@typescript-eslint/parser` to latest, and `patch-package` to latest — reduced vulnerability count from 57 to 50. The remaining 50 are all within the `vercel` CLI dev tool or packages with no fix currently available (`@tanstack/history`, `elliptic`, `vite/esbuild`) — zero production impact.
 
 ## 2026-W19
 
@@ -21,7 +28,7 @@
   - Three AI-powered commands are now available inside any note (powered by OpenAI via a server-side Vercel Function, key never exposed to the browser):
     - **Cmd+J** — continues writing from the cursor position, matching your tone and context. Ghost text streams in; press Tab to accept.
     - **Cmd+K** — compose panel. With text selected: rewrites it per your instruction. With nothing selected: generates new content from your prompt. Tab to accept.
-    - **Cmd+L** — Q&A reference panel. Ask a question (e.g. "Where is Rogoznica?") and the answer appears inline. Click the answer to copy it to the clipboard, then paste wherever you need it.
+    - **Cmd+L** — Q&A reference panel. Ask a question (e.g. "Where is Rogoznica?") and the answer appears inline. Click the answer to copy it to the clipboard, then paste wherever you need it. This command does not work in Safari. In Safari the command opens the browser's address bar. 
   - **`api/ai-enhance`** — new server-side Vercel Function that handles all three AI modes, builds context-aware prompts from the surrounding document, and streams the OpenAI response back to the editor.
   - **`scripts/dev-vercel.mjs`** — wrapper script for `npm run dev:vercel` that pre-loads sensitive API keys (e.g. `OPENAI_API_KEY`, `TMDB_API_KEY`) from a gitignored `.env.keys` file before starting the Vercel dev server. Fixes a Vercel limitation where Sensitive environment variables cannot be set for the Development environment and are therefore absent from `vercel env pull`.
 
