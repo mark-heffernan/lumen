@@ -1,19 +1,21 @@
 # Changelog
 
-## 2026-W20 
+## 2026-W20
 
 ### New
 
 - **RSS Feed Reader** — Lumen can now subscribe to and read RSS/Atom feeds. Access via the new **Feeds** entry in the sidebar (between Tags and the bottom section).
-  - **Feed list** (`/feeds`) — subscribe by pasting any RSS/Atom URL; the feed title is auto-fetched on add. Feeds are stored in the browser (localStorage) and persist across sessions.
+  - **Feed list** (`/feeds`) — subscribe by pasting any RSS/Atom URL; the feed title is auto-fetched on add.
   - **Article view** (`/feeds/{id}`) — lists up to 50 articles per feed with title, excerpt, author, and publication date. Each article links out to the original source.
- - **Save as note** — hover over any article and click the note icon to save it as a Lumen note pre-filled with the title, source link, date, and excerpt. The note opens with the tag `rss` and is ready for editing. 
+  - **Save as note** — hover over any article and click the note icon to save it as a Lumen note pre-filled with the title, source link, date, and excerpt. The note opens with the tag `rss` and is ready for editing.
   - **`api/rss.ts`** — new Vercel Function that fetches and parses feeds server-side using `rss-parser`, avoiding browser CORS restrictions entirely. Responses are cached for 5 minutes.
   - Feed subscriptions are also manageable from **Settings → Feeds**.
-
-### New
-
+  - **Feed persistence via `.lumen/feeds.json`** — subscribed feeds are stored in `.lumen/feeds.json` inside the connected git repository, not in browser localStorage. This means feed subscriptions sync across all your devices automatically via the existing git sync mechanism (add a feed on desktop → it appears on iPhone after the next sync). On first load, any feeds previously saved in localStorage are automatically migrated to the JSON file and the localStorage key is cleared. The `WRITE_FILES` state machine event was extended with a `rawFiles` field to support writing repo-root-relative files (like `.lumen/feeds.json`) independently of the workspace `notesPath`.
 - **Vercel Web Analytics** — added `@vercel/analytics` and the `<Analytics />` component to the app root (`src/routes/__root.tsx`). Page view and navigation events are now tracked automatically in the Vercel dashboard with no client-side configuration required.
+
+### Fixed
+
+- **HTML entities in feed titles and excerpts** — some feeds (e.g. kottke.org) include raw HTML character references such as `&#8220;` (left double quote) and `&#8217;` (right single quote) in their title and content fields. These now render as the correct Unicode characters. The `decodeEntities()` function in `api/rss.ts` handles numeric decimal, numeric hex, and the six common named entities (`&amp;`, `&lt;`, `&gt;`, `&quot;`, `&apos;`, `&nbsp;`).
 
 ### Improved
 
@@ -21,7 +23,8 @@
 
 ### Package updates
 
-- Updated `@typescript-eslint/eslint-plugin` and `@typescript-eslint/parser` to latest, and `patch-package` to latest — reduced vulnerability count from 57 to 50. The remaining 50 are all within the `vercel` CLI dev tool or packages with no fix currently available (`@tanstack/history`, `elliptic`, `vite/esbuild`) — zero production impact.
+- **Migrated to `jotai-babel`** — replaced the deprecated `jotai/babel/plugin-debug-label` and `jotai/babel/plugin-react-refresh` imports in `vite.config.ts` with the new `jotai-babel` package (`jotai-babel/plugin-debug-label` and `jotai-babel/plugin-react-refresh`). The API is identical — this is a drop-in path change. Eliminates the deprecation warnings on dev server start and future-proofs the setup for jotai v3. Also reduced vulnerability count from 50 → 42.
+- **Updated** `@typescript-eslint/eslint-plugin` and `@typescript-eslint/parser` to latest, and `patch-package` to latest — reduced vulnerability count from 57 to 50. The remaining vulnerabilities are all within the `vercel` CLI dev tool or packages with no fix currently available (`@tanstack/history`, `elliptic`, `vite/esbuild`) — zero production impact.
 
 ## 2026-W19
 
