@@ -44,6 +44,12 @@ export async function gitPull(user: GitHubUser, dir: string) {
     http,
     dir,
     singleBranch: true,
+    // Pass author explicitly so pull works even if .git/config is missing
+    // (e.g. after browser storage was cleared). Falls back to login if name is unset.
+    author: {
+      name: user.name || user.login,
+      email: user.email || `${user.login}@users.noreply.github.com`,
+    },
     onMessage: (message) => console.debug("onMessage", message),
     onProgress: (progress) => console.debug("onProgress", progress),
     onAuth: () => ({ username: user.login, password: user.token }),

@@ -15,6 +15,7 @@
 
 ### Fixed
 
+- **`MissingNameError` on git pull** — isomorphic-git's `pull` requires an author name/email to create merge commits, but was relying solely on reading these from the `.git/config` file inside the cloned repo. If the browser's IndexedDB storage was ever cleared (losing the cloned repo) the config file would be absent and every subsequent sync attempt would fail with `MissingNameError`. Fixed by passing `author` explicitly to `git.pull()` in `src/utils/git.ts`, with `user.login` as a fallback for accounts that have no display name set and `{login}@users.noreply.github.com` as a fallback email.
 - **HTML entities in feed titles and excerpts** — some feeds (e.g. kottke.org) include raw HTML character references such as `&#8220;` (left double quote) and `&#8217;` (right single quote) in their title and content fields. These now render as the correct Unicode characters. The `decodeEntities()` function in `api/rss.ts` handles numeric decimal, numeric hex, and the six common named entities (`&amp;`, `&lt;`, `&gt;`, `&quot;`, `&apos;`, `&nbsp;`).
 
 ### Improved
