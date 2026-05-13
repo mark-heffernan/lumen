@@ -71,6 +71,8 @@ type Event =
   | {
       type: "WRITE_FILES"
       markdownFiles: Record<string, string | null>
+      /** Repo-root-relative files written without any notesPath prefix (e.g. .lumen/feeds.json) */
+      rawFiles?: Record<string, string | null>
       commitMessage?: string
     }
   | { type: "DELETE_FILE"; filepath: string }
@@ -486,10 +488,16 @@ function createGlobalStateMachine() {
           const entries = Object.entries(event.markdownFiles)
           const filesToWrite = entries.filter(([, content]) => content !== null)
           const filesToDelete = entries.filter(([, content]) => content === null)
-          const fileList = entries.map(([filepath]) => filepath)
+          const rawEntries = Object.entries(event.rawFiles ?? {})
+          const rawToWrite = rawEntries.filter(([, content]) => content !== null)
+          const rawToDelete = rawEntries.filter(([, content]) => content === null)
+          const fileList = [
+            ...entries.map(([filepath]) => filepath),
+            ...rawEntries.map(([filepath]) => filepath),
+          ]
           const commitMessage = event.commitMessage ?? `Update ${fileList.join(" ") || "notes"}`
 
-          // Write files to file system (paths are relative to notesPath)
+          // Write markdown files (paths are relative to notesPath)
           for (const [filepath, content] of filesToWrite) {
             if (content === null) continue
 
@@ -509,16 +517,41 @@ function createGlobalStateMachine() {
             await fs.promises.writeFile(`${dir}/${repoFilepath}`, content, "utf8")
           }
 
-          // Delete files from file system
+          // Delete markdown files from file system
           for (const [filepath] of filesToDelete) {
             const repoFilepath = notesPath ? `${notesPath}/${filepath}` : filepath
             await fs.promises.unlink(`${dir}/${repoFilepath}`).catch(() => null)
           }
 
-          // Stage files (git paths are relative to repo root)
-          const gitPathsToAdd = filesToWrite.map(([filepath]) =>
-            notesPath ? `${notesPath}/${filepath}` : filepath,
-          )
+          // Write raw files (paths are repo-root-relative, no notesPath prefix)
+          for (const [filepath, content] of rawToWrite) {
+            if (content === null) continue
+            const dirPath = filepath.split("/").slice(0, -1).join("/")
+
+            if (dirPath) {
+              let currentPath = dir
+              for (const segment of dirPath.split("/")) {
+                currentPath = `${currentPath}/${segment}`
+                const stats = await fs.promises.stat(currentPath).catch(() => null)
+                if (!stats) await fs.promises.mkdir(currentPath)
+              }
+            }
+
+            await fs.promises.writeFile(`${dir}/${filepath}`, content, "utf8")
+          }
+
+          // Delete raw files from file system
+          for (const [filepath] of rawToDelete) {
+            await fs.promises.unlink(`${dir}/${filepath}`).catch(() => null)
+          }
+
+          // Stage all files (git paths are relative to repo root)
+          const gitPathsToAdd = [
+            ...filesToWrite.map(([filepath]) =>
+              notesPath ? `${notesPath}/${filepath}` : filepath,
+            ),
+            ...rawToWrite.map(([filepath]) => filepath),
+          ]
           if (gitPathsToAdd.length > 0) {
             await gitAdd(gitPathsToAdd, dir)
           }
@@ -527,6 +560,13 @@ function createGlobalStateMachine() {
             const repoFilepath = notesPath ? `${notesPath}/${filepath}` : filepath
             try {
               await gitRemove(repoFilepath, dir)
+            } catch {
+              // Ignore if the file isn't tracked
+            }
+          }
+          for (const [filepath] of rawToDelete) {
+            try {
+              await gitRemove(filepath, dir)
             } catch {
               // Ignore if the file isn't tracked
             }
@@ -1108,4 +1148,5 @@ export type RssFeed = {
   addedAt: string // ISO date string
 }
 
-export const feedsAtom = atomWithStorage<RssFeed[]>("rss_feeds", [])
+/** Populated from .lumen/feeds.json in the active workspace repo by useFeedsSync */
+export const feedsAtom = atom<RssFeed[]>([])

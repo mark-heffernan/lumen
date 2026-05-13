@@ -61,14 +61,14 @@ export function FeedForm({ onSuccess, onCancel }: FeedFormProps) {
         <input
           id="feed-url"
           type="url"
-          autoFocus
+          //autoFocus
           required
           placeholder="https://example.com/feed.xml"
           value={url}
           onChange={(e) => setUrl(e.target.value)}
-          className="rounded-lg border border-border bg-bg px-3 py-2 text-sm focus:outline focus:outline-2 focus:-outline-offset-2 focus:outline-border-focus"
+          className="rounded-lg border border-border bg-bg px-3 py-2 text-sm focus:outline-2 focus:-outline-offset-2 focus:outline-border-focus"
         />
-        {error ? <p className="text-sm text-[var(--color-error,red)]">{error}</p> : null}
+        {error ? <p className="text-sm text-(--color-error,red)">{error}</p> : null}
       </div>
       <div className="flex justify-end gap-2">
         {onCancel ? (

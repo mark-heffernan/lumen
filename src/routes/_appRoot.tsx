@@ -21,6 +21,7 @@ import {
   tagsAtom,
   templatesAtom,
 } from "../global-state"
+import { useFeedsSync } from "../hooks/feeds-sync"
 import { useSearchNotes } from "../hooks/search-notes"
 import { useValueRef } from "../hooks/value-ref"
 import { generateNoteId } from "../utils/note-id"
@@ -53,6 +54,9 @@ function RouteComponent() {
   const navigate = useNavigate()
   const { online } = useNetworkState()
   const rootRef = React.useRef<HTMLDivElement>(null)
+
+  // Sync RSS feeds with .lumen/feeds.json in the git repo
+  useFeedsSync()
 
   // Sync when the app becomes visible again
   useEvent("visibilitychange", () => {
