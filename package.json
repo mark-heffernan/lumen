@@ -163,6 +163,7 @@
     "eslint-plugin-react-hooks": "^4.6.2",
     "eslint-plugin-storybook": "^0.8.0",
     "http-server": "^14.1.1",
+    "jotai-babel": "^0.1.0",
     "patch-package": "^8.0.1",
     "postcss": "^8.5.14",
     "prettier": "^3.8.3",
