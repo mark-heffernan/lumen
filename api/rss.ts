@@ -1,5 +1,24 @@
 import RSSParser from "rss-parser"
 
+/**
+ * Decode HTML entities in plain-text fields.
+ * Handles numeric (&#8220;) and hex (&#x201C;) references, plus the handful
+ * of named entities that commonly appear in RSS feed titles/descriptions.
+ */
+function decodeEntities(str: string): string {
+  return str
+    .replace(/&#(\d+);/g, (_, code: string) => String.fromCharCode(parseInt(code, 10)))
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, code: string) =>
+      String.fromCharCode(parseInt(code, 16)),
+    )
+    .replace(/&amp;/g, "&")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&apos;/g, "'")
+    .replace(/&nbsp;/g, " ")
+}
+
 const parser = new RSSParser({
   timeout: 10000,
   headers: {
@@ -53,15 +72,19 @@ export async function GET(request: Request): Promise<Response> {
     const feed = await parser.parseURL(parsedUrl.toString())
 
     const response: RssFeedResponse = {
-      title: feed.title ?? parsedUrl.hostname,
-      description: feed.description ?? null,
+      title: decodeEntities(feed.title ?? parsedUrl.hostname),
+      description: feed.description ? decodeEntities(feed.description) : null,
       link: feed.link ?? null,
       items: feed.items.slice(0, 50).map((item) => ({
         id: item.guid ?? item.link ?? item.title ?? Math.random().toString(36),
-        title: item.title ?? "(no title)",
+        title: decodeEntities(item.title ?? "(no title)"),
         link: item.link ?? "",
         pubDate: item.pubDate ?? item.isoDate ?? null,
-        contentSnippet: item.contentSnippet ?? item.summary ?? null,
+        contentSnippet: item.contentSnippet
+          ? decodeEntities(item.contentSnippet)
+          : item.summary
+            ? decodeEntities(item.summary)
+            : null,
         author: item.creator ?? item.author ?? null,
       })),
     }
