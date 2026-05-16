@@ -58,6 +58,8 @@ type Context = {
   activeWorkspaceId: string | null
   markdownFiles: Record<string, string>
   error: Error | null
+  /** Last sync error — null when synced successfully */
+  syncError: Error | null
 }
 
 type Event =
@@ -144,6 +146,7 @@ function createGlobalStateMachine() {
         activeWorkspaceId: initialActiveWorkspaceId,
         markdownFiles: {},
         error: null,
+        syncError: null,
       },
       states: {
         resolvingUser: {
@@ -280,7 +283,7 @@ function createGlobalStateMachine() {
                       },
                     },
                     error: {
-                      entry: "logError",
+                      entry: ["logError", "setSyncError"],
                       on: {
                         SYNC: "pulling",
                         SYNC_DEBOUNCED: "debouncing",
@@ -304,7 +307,7 @@ function createGlobalStateMachine() {
                         src: "pull",
                         onDone: {
                           target: "pushing",
-                          actions: ["setMarkdownFiles", "setMarkdownFilesLocalStorage"],
+                          actions: ["setMarkdownFiles", "setMarkdownFilesLocalStorage", "clearSyncError"],
                         },
                         onError: "error",
                       },
@@ -777,6 +780,10 @@ function createGlobalStateMachine() {
         logError: (_, event) => {
           console.error((event as unknown as { data: unknown }).data)
         },
+        setSyncError: assign({
+          syncError: (_, event) => (event as unknown as { data: Error }).data as Error,
+        }),
+        clearSyncError: assign({ syncError: null }),
       },
     },
   )

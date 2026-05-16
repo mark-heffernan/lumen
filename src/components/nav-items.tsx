@@ -36,7 +36,7 @@ import {
   TagIcon16,
 } from "./icons"
 import { NoteFavicon } from "./note-favicon"
-import { SyncStatusIcon, useSyncStatusText } from "./sync-status"
+import { SyncStatusIcon, useSyncError, useSyncStatusText } from "./sync-status"
 
 const hasDailyNoteAtom = selectAtom(notesAtom, (notes) => notes.has(toDateString(new Date())))
 
@@ -52,6 +52,7 @@ export function NavItems({
   const pinnedNotes = useAtomValue(pinnedNotesAtom)
   const hasDailyNote = useAtomValue(hasDailyNoteAtom)
   const syncText = useSyncStatusText()
+  const syncErrorInfo = useSyncError()
   const send = useSetAtom(globalStateMachineAtom)
   const { online } = useNetworkState()
   const activeWorkspace = useAtomValue(activeWorkspaceAtom)
@@ -235,14 +236,41 @@ export function NavItems({
                 {colorScheme === "dark" ? "Dark" : colorScheme === "light" ? "Light" : "System"}
               </button>
               {syncText ? (
-                <button
-                  className="nav-item text-text-secondary"
-                  data-size={size}
-                  onClick={() => send({ type: "SYNC" })}
-                >
-                  <SyncStatusIcon />
-                  {syncText}
-                </button>
+                <div className="flex flex-col gap-1">
+                  <button
+                    className="nav-item text-text-secondary"
+                    data-size={size}
+                    onClick={
+                      syncErrorInfo?.action === "reauthenticate"
+                        ? undefined
+                        : () => send({ type: "SYNC" })
+                    }
+                    title={syncErrorInfo ? syncErrorInfo.detail : undefined}
+                  >
+                    <SyncStatusIcon />
+                    {syncText}
+                  </button>
+                  {syncErrorInfo ? (
+                    <p className="pl-7 text-xs text-text-danger leading-snug">
+                      {syncErrorInfo.detail}
+                      {syncErrorInfo.action === "reauthenticate" ? (
+                        <>
+                          {" "}
+                          <Link to="/settings" search={{ query: undefined }} className="underline">
+                            Re-authenticate in Settings.
+                          </Link>
+                        </>
+                      ) : (
+                        <button
+                          className="ml-1 underline"
+                          onClick={() => send({ type: "SYNC" })}
+                        >
+                          Retry.
+                        </button>
+                      )}
+                    </p>
+                  ) : null}
+                </div>
               ) : null}
               <NavLink
                 to="/docs"
