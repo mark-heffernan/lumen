@@ -5,6 +5,8 @@ import type { RssFeedItem } from "../../api/rss"
 import { IconButton } from "../components/icon-button"
 import {
   CheckIcon16,
+  ChevronDownIcon16,
+  ChevronUpIcon16,
   ExternalLinkIcon16,
   LoadingIcon16,
   NoteIcon16,
@@ -204,15 +206,21 @@ function FilterBar({
   totalUnread: number
   readIds: Set<string>
 }) {
-  const allUnread = totalUnread
+  // Collapsed by default on mobile; desktop always shows pills via sm:flex
+  const [mobileOpen, setMobileOpen] = React.useState(false)
 
-  return (
-    <div className="flex flex-wrap gap-1.5">
+  const activeLabel =
+    activeFilter === null
+      ? "All feeds"
+      : (feedLoadStates.find((s) => s.feedId === activeFilter)?.feedTitle ?? "All feeds")
+
+  const pills = (
+    <>
       <FilterPill active={activeFilter === null} onClick={() => onFilterChange(null)}>
         All
-        {allUnread > 0 ? (
+        {totalUnread > 0 ? (
           <span className="ml-1 rounded-full bg-text px-1.5 py-px text-[10px] font-medium leading-none text-bg tabular-nums">
-            {allUnread}
+            {totalUnread}
           </span>
         ) : null}
       </FilterPill>
@@ -221,7 +229,6 @@ function FilterBar({
         const feedUnread = s.data
           ? s.data.items.filter((item) => !readIds.has(item.id)).length
           : 0
-
         return (
           <FilterPill
             key={s.feedId}
@@ -239,6 +246,31 @@ function FilterBar({
           </FilterPill>
         )
       })}
+    </>
+  )
+
+  return (
+    <div className="flex flex-col gap-2">
+      {/* Mobile toggle — hidden on sm+ screens */}
+      <button
+        className="flex items-center justify-between gap-2 rounded-lg border border-border bg-bg px-3 py-2 text-sm font-medium sm:hidden"
+        onClick={() => setMobileOpen((o) => !o)}
+      >
+        <span className="truncate text-text">{activeLabel}</span>
+        <span className="flex shrink-0 items-center gap-1 text-text-secondary">
+          {totalUnread > 0 ? (
+            <span className="rounded-full bg-text px-1.5 py-px text-[10px] font-medium leading-none text-bg tabular-nums">
+              {totalUnread}
+            </span>
+          ) : null}
+          {mobileOpen ? <ChevronUpIcon16 /> : <ChevronDownIcon16 />}
+        </span>
+      </button>
+
+      {/* Pills — always visible on sm+, toggled on mobile */}
+      <div className={`flex-wrap gap-1.5 ${mobileOpen ? "flex" : "hidden sm:flex"}`}>
+        {pills}
+      </div>
     </div>
   )
 }
