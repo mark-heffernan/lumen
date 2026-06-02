@@ -707,6 +707,14 @@ export function RssFeedIcon16(props: IconProps) {
   )
 }
 
+export function RefreshIcon16(props: IconProps) {
+  return (
+    <Icon size={16} {...props}>
+      <path d="M13.7 2.3a1 1 0 0 0-1.4 0L11 3.6A7 7 0 1 0 15 10a1 1 0 1 0-2 0 5 5 0 1 1-2.93-4.55L8.7 6.8A1 1 0 0 0 9.41 8.5H14a1 1 0 0 0 1-1V3a1 1 0 0 0-.59-.91 1 1 0 0 0-.71.21Z" />
+    </Icon>
+  )
+}
+
 export function GlobeIcon16(props: IconProps) {
   return (
     <Icon size={16} {...props}>

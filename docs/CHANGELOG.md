@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-W23
+
+### New
+
+- **Feed Reader dashboard** (`/feeds/dashboard`) — a new unified reading view that fetches all subscribed feeds in parallel and displays articles as a card grid (3 columns on desktop, 2 on tablet, 1 on mobile), sorted newest-first across all sources. Access via the new **Reader** entry in the sidebar.
+  - **Filter pills** — a scrollable pill row at the top lets you view all feeds at once or filter to a single source. Each pill shows an unread count badge.
+  - **Article cards** — each card shows the source name, time ago, article title (links out to the original), a 3-line excerpt, and author. Hovering reveals a **Save as note** button (📝) that creates a pre-filled note and marks the article as read.
+  - **Article images** — when a feed item includes a `media:thumbnail`, `media:content`, RSS enclosure, or an `<img>` tag in its content HTML, the image is shown at the top of the card. Images that are too small to display well (below 300×150 px) are automatically suppressed — detected first via URL query parameters (e.g. The Guardian's `?width=140`) and then via a `naturalWidth`/`naturalHeight` check after load.
+  - **Unread tracking** — unread articles have a blue left border and bold title. Clicking a title or saving as a note marks it read. A **Mark all read** button appears in the header when there are unread items. Read state is stored in `localStorage` (per-device — no git commits per article click).
+  - **Refresh** — a refresh button clears the in-memory feed cache and re-fetches all feeds in parallel, with a spinner while loading. Skeleton placeholder cards are shown on first visit before feeds have loaded.
+  - **`useAllFeeds()` hook** (`src/hooks/feeds.ts`) — new parallel-fetch hook that manages per-feed loading/error states, the shared in-memory cache, and the refresh trigger.
+  - **`src/utils/read-articles.ts`** — new utility for persisting read article IDs in `localStorage`, capped at 2 000 entries to avoid storage bloat.
+
 ## 2026-W20
 
 ### New

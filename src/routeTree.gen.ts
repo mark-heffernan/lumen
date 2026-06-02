@@ -22,6 +22,7 @@ import { Route as AppRootDocsIndexRouteImport } from './routes/_appRoot.docs.ind
 import { Route as AppRootTagsSplatRouteImport } from './routes/_appRoot.tags_.$'
 import { Route as AppRootNotesSplatRouteImport } from './routes/_appRoot.notes_.$'
 import { Route as AppRootFeedsSplatRouteImport } from './routes/_appRoot.feeds_.$'
+import { Route as AppRootFeedsDashboardRouteImport } from './routes/_appRoot.feeds.dashboard'
 import { Route as AppRootDocsDocRouteImport } from './routes/_appRoot.docs_.$doc'
 
 const AiRoute = AiRouteImport.update({
@@ -88,6 +89,11 @@ const AppRootFeedsSplatRoute = AppRootFeedsSplatRouteImport.update({
   path: '/feeds/$',
   getParentRoute: () => AppRootRoute,
 } as any)
+const AppRootFeedsDashboardRoute = AppRootFeedsDashboardRouteImport.update({
+  id: '/feeds/dashboard',
+  path: '/feeds/dashboard',
+  getParentRoute: () => AppRootRoute,
+} as any)
 const AppRootDocsDocRoute = AppRootDocsDocRouteImport.update({
   id: '/docs_/$doc',
   path: '/docs/$doc',
@@ -101,6 +107,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AppRootSettingsRoute
   '/share/$gistId': typeof ShareGistIdRoute
   '/docs/$doc': typeof AppRootDocsDocRoute
+  '/feeds/dashboard': typeof AppRootFeedsDashboardRoute
   '/feeds/$': typeof AppRootFeedsSplatRoute
   '/notes/$': typeof AppRootNotesSplatRoute
   '/tags/$': typeof AppRootTagsSplatRoute
@@ -116,6 +123,7 @@ export interface FileRoutesByTo {
   '/share/$gistId': typeof ShareGistIdRoute
   '/': typeof AppRootIndexRoute
   '/docs/$doc': typeof AppRootDocsDocRoute
+  '/feeds/dashboard': typeof AppRootFeedsDashboardRoute
   '/feeds/$': typeof AppRootFeedsSplatRoute
   '/notes/$': typeof AppRootNotesSplatRoute
   '/tags/$': typeof AppRootTagsSplatRoute
@@ -133,6 +141,7 @@ export interface FileRoutesById {
   '/share/$gistId': typeof ShareGistIdRoute
   '/_appRoot/': typeof AppRootIndexRoute
   '/_appRoot/docs_/$doc': typeof AppRootDocsDocRoute
+  '/_appRoot/feeds/dashboard': typeof AppRootFeedsDashboardRoute
   '/_appRoot/feeds_/$': typeof AppRootFeedsSplatRoute
   '/_appRoot/notes_/$': typeof AppRootNotesSplatRoute
   '/_appRoot/tags_/$': typeof AppRootTagsSplatRoute
@@ -150,6 +159,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/share/$gistId'
     | '/docs/$doc'
+    | '/feeds/dashboard'
     | '/feeds/$'
     | '/notes/$'
     | '/tags/$'
@@ -165,6 +175,7 @@ export interface FileRouteTypes {
     | '/share/$gistId'
     | '/'
     | '/docs/$doc'
+    | '/feeds/dashboard'
     | '/feeds/$'
     | '/notes/$'
     | '/tags/$'
@@ -181,6 +192,7 @@ export interface FileRouteTypes {
     | '/share/$gistId'
     | '/_appRoot/'
     | '/_appRoot/docs_/$doc'
+    | '/_appRoot/feeds/dashboard'
     | '/_appRoot/feeds_/$'
     | '/_appRoot/notes_/$'
     | '/_appRoot/tags_/$'
@@ -289,6 +301,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppRootFeedsSplatRouteImport
       parentRoute: typeof AppRootRoute
     }
+    '/_appRoot/feeds/dashboard': {
+      id: '/_appRoot/feeds/dashboard'
+      path: '/feeds/dashboard'
+      fullPath: '/feeds/dashboard'
+      preLoaderRoute: typeof AppRootFeedsDashboardRouteImport
+      parentRoute: typeof AppRootRoute
+    }
     '/_appRoot/docs_/$doc': {
       id: '/_appRoot/docs_/$doc'
       path: '/docs/$doc'
@@ -304,6 +323,7 @@ interface AppRootRouteChildren {
   AppRootSettingsRoute: typeof AppRootSettingsRoute
   AppRootIndexRoute: typeof AppRootIndexRoute
   AppRootDocsDocRoute: typeof AppRootDocsDocRoute
+  AppRootFeedsDashboardRoute: typeof AppRootFeedsDashboardRoute
   AppRootFeedsSplatRoute: typeof AppRootFeedsSplatRoute
   AppRootNotesSplatRoute: typeof AppRootNotesSplatRoute
   AppRootTagsSplatRoute: typeof AppRootTagsSplatRoute
@@ -318,6 +338,7 @@ const AppRootRouteChildren: AppRootRouteChildren = {
   AppRootSettingsRoute: AppRootSettingsRoute,
   AppRootIndexRoute: AppRootIndexRoute,
   AppRootDocsDocRoute: AppRootDocsDocRoute,
+  AppRootFeedsDashboardRoute: AppRootFeedsDashboardRoute,
   AppRootFeedsSplatRoute: AppRootFeedsSplatRoute,
   AppRootNotesSplatRoute: AppRootNotesSplatRoute,
   AppRootTagsSplatRoute: AppRootTagsSplatRoute,

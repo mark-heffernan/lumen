@@ -19,11 +19,56 @@ function decodeEntities(str: string): string {
     .replace(/&nbsp;/g, " ")
 }
 
-const parser = new RSSParser({
+/**
+ * Extract the best image URL from a parsed RSS item.
+ * Checks (in priority order):
+ *   1. media:thumbnail
+ *   2. media:content with image medium
+ *   3. enclosure with image MIME type
+ *   4. First <img> found in the full content HTML
+ */
+function extractImageUrl(
+  item: CustomItem & { enclosure?: { url?: string; type?: string }; content?: string },
+): string | null {
+  // 1. media:thumbnail — e.g. <media:thumbnail url="…" />
+  const thumbUrl = item.mediaThumbnail?.$?.url
+  if (thumbUrl) return thumbUrl
+
+  // 2. media:content — e.g. <media:content url="…" medium="image" />
+  const mc = item.mediaContent
+  if (mc?.$?.url && (!mc.$.medium || mc.$.medium === "image")) return mc.$.url
+
+  // 3. RSS enclosure with image MIME type
+  if (item.enclosure?.url && item.enclosure?.type?.startsWith("image/")) return item.enclosure.url
+
+  // 4. First <img src="…"> in the full content HTML
+  if (item.content) {
+    const match = item.content.match(/<img[^>]+src=["']([^"']+)["']/i)
+    if (match?.[1]) return match[1]
+  }
+
+  return null
+}
+
+type CustomItem = {
+  mediaThumbnail?: { $?: { url?: string } }
+  mediaContent?: { $?: { url?: string; medium?: string } }
+  author?: string
+  content?: string
+  enclosure?: { url?: string; type?: string }
+}
+
+const parser = new RSSParser<Record<string, unknown>, CustomItem>({
   timeout: 10000,
   headers: {
     "User-Agent": "Lumen RSS Reader/1.0",
     Accept: "application/rss+xml, application/atom+xml, application/xml, text/xml, */*",
+  },
+  customFields: {
+    item: [
+      ["media:thumbnail", "mediaThumbnail"],
+      ["media:content", "mediaContent"],
+    ],
   },
 })
 
@@ -34,6 +79,7 @@ export type RssFeedItem = {
   pubDate: string | null
   contentSnippet: string | null
   author: string | null
+  imageUrl: string | null
 }
 
 export type RssFeedResponse = {
@@ -86,6 +132,7 @@ export async function GET(request: Request): Promise<Response> {
             ? decodeEntities(item.summary)
             : null,
         author: item.creator ?? item.author ?? null,
+        imageUrl: extractImageUrl(item),
       })),
     }
 

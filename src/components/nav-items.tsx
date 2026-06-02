@@ -23,6 +23,7 @@ import {
   CircleQuestionMarkFillIcon16,
   CircleQuestionMarkIcon16,
   DatabaseIcon16,
+  GridIcon16,
   MonitorIcon16,
   MoonIcon16,
   NoteFillIcon16,
@@ -145,6 +146,15 @@ export function NavItems({
                 onNavigate={onNavigate}
               >
                 Feeds
+              </NavLink>
+            </li>
+            <li>
+              <NavLink
+                to="/feeds/dashboard"
+                icon={<GridIcon16 />}
+                onNavigate={onNavigate}
+              >
+                Reader
               </NavLink>
             </li>
           </ul>
